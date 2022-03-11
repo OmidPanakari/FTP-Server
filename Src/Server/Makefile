@@ -5,17 +5,19 @@ RM = rm
 
 
 
-all: Client.out Server.out Logger.o
+all: Server.out Logger.o JsonSerializer.o
 
 
-Client.out: Client.cpp
-	$(CC) $(FLAGS) Client.cpp -o Client.out
-
-Server.out: Server.cpp Logger.o
-	$(CC) $(FLAGS) Server.cpp Logger.o -o Server.out
+Server.out: Server.cpp Logger.o JsonSerializer.o
+	$(CC) $(FLAGS) Server.cpp Logger.o JsonSerializer.o -o Server.out
 
 Logger.o: Logger.cpp Logger.hpp
 	$(CC) $(FLAGS) Logger.cpp -c
+
+JsonSerializer.o: JsonSerializer.cpp JsonSerializer.hpp
+	$(CC) $(FLAGS) JsonSerializer.cpp -c
+
+
 
 
 .PHONY: clean
