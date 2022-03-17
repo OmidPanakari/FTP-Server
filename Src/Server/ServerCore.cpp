@@ -48,7 +48,7 @@ int ServerCore::CheckUsername(string username, int clientID) {
             return 331;
         }
     }
-    return 500;
+    return 430;
 }
 
 bool ServerCore::IsAuthenticated(int clientID) {
@@ -71,7 +71,7 @@ int ServerCore::Authenticate(string password, int clientID) {
             cout << loggedInUsers[clientID].isAuthenticated << endl;
             return 230;
         }
-        return 500;
+        return 430;
     }
     return 503;
 }
@@ -90,7 +90,7 @@ vector <string> ServerCore::Split(string str, char c) {
     return result;
 }
 
-string ServerCore::MakeDirStr(vector<string> pathStk)
+string ServerCore::MakeDirStr(vector<string> pathStk, bool addRoot = true)
 {
     string dir = "";
     for (string p : pathStk)
@@ -99,7 +99,7 @@ string ServerCore::MakeDirStr(vector<string> pathStk)
     }
     if (dir == "")
         dir = "/";
-    return ROOT + dir;
+    return addRoot ? ROOT + dir : dir;
 }
 
 vector<string> ServerCore::ConvertDirectory(vector<string> current, string path) {
@@ -121,6 +121,21 @@ vector<string> ServerCore::ConvertDirectory(vector<string> current, string path)
     return current;
 }
 
+int ServerCore::RenameFile(std::string path, std::string newPath, int clientID) {
+    if (!IsAuthenticated(clientID)) return 332;
+    auto currentDirectory = loggedInUsers[clientID].directory;
+    auto dest = ConvertDirectory(currentDirectory, path);
+    auto old = dest.back();
+    if (!PathExists(dest))
+        return 500;
+    dest.pop_back();
+    auto destStr = MakeDirStr(dest) + "/";
+    if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(destStr + old) != adminFiles.end())
+        return 550;
+    rename((destStr + old).c_str(), (destStr + newPath).c_str());
+    return 250;
+}
+
 int ServerCore::DeleteFileOrDirectory(std::string path, int clientID) {
     if (!IsAuthenticated(clientID)) return 332;
     auto currentDirectory = loggedInUsers[clientID].directory;
@@ -129,8 +144,18 @@ int ServerCore::DeleteFileOrDirectory(std::string path, int clientID) {
     if (!PathExists(dest))
         return 500;
     if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(destStr) != adminFiles.end())
-        return 500;
+        return 550;
     remove(destStr.c_str());
+    return 250;
+}
+
+int ServerCore::ChangeDirectory(std::string path, int clientID) {
+    if (!IsAuthenticated(clientID)) return 332;
+    auto currentDirectory = loggedInUsers[clientID].directory;
+    auto dest = ConvertDirectory(currentDirectory, path);
+    if (!PathExists(dest))
+        return 500;
+    loggedInUsers[clientID].directory = dest;
     return 250;
 }
 
@@ -143,7 +168,7 @@ bool ServerCore::PathExists(vector<string> path)
 
 GetDirectoryResponse ServerCore::GetCurrentDirectory(int clientID) {
     if (!IsAuthenticated(clientID)) return {332, ""};
-    string dir = MakeDirStr(loggedInUsers[clientID].directory);
+    string dir = MakeDirStr(loggedInUsers[clientID].directory, false);
     return {257, dir};
 }
 

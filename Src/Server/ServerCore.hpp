@@ -43,7 +43,7 @@ private:
     bool IsAuthenticated(int);
     std::vector<std::string> Split(std::string, char);
     std::vector<std::string> ConvertDirectory(std::vector<std::string>, std::string);
-    std::string MakeDirStr(std::vector<std::string>);
+    std::string MakeDirStr(std::vector<std::string>, bool);
     bool PathExists(std::vector<std::string>);
 
 public:
