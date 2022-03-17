@@ -1,0 +1,19 @@
+{
+    "privilegedFiles" : [
+
+    ],
+    "users" : [
+        {
+            "username" : "Amir",
+            "password" : "1234",
+            "isAdmin" : "True"
+        },
+        {
+            "username" : "omid",
+            "password" : "mysecret",
+            "isAdmin" : "False"
+        }
+    ],
+    "maxAllowedConnections" : "10"
+    
+}
