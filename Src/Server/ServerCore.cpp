@@ -8,6 +8,11 @@ ServerCore::ServerCore(JsonSerializer config)
     ReadUsers(config);
     ReadAdminFiles(config);
     maxAllowedConnections = config.GetInteger("maxAllowedConnections");
+    struct stat buffer;
+    if (stat(ROOT, &buffer) != 0)
+    {
+        mkdir(ROOT, 0777);
+    }
 }
 
 void ServerCore::ReadUsers(JsonSerializer config)
@@ -94,7 +99,7 @@ string ServerCore::MakeDirStr(vector<string> pathStk)
     }
     if (dir == "")
         dir = "/";
-    return "." + dir;
+    return ROOT + dir;
 }
 
 vector<string> ServerCore::ConvertDirectory(vector<string> current, string path) {
@@ -144,7 +149,7 @@ int ServerCore::MakeDirectory(string path, int clientID)
     dest.push_back(newDir);
     if (mkdir(MakeDirStr(dest).c_str(), 0777) == 0)
         return 257;
-    return 508;
+    return 500;
 }
 
 
