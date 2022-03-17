@@ -1,6 +1,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <set>
+#include <iostream>
 #include "JsonSerializer.hpp"
 
 #ifndef FTP_SERVER_SERVERCORE_HPP
@@ -16,39 +18,40 @@ struct User{
 struct OnlineUser
 {
     User *user;
-    bool isAuthenticated; 
+    bool isAuthenticated;
+    std::string directory;
 };
 
-struct LoginResponse
+struct GetDirectoryResponse
 {
-    int token;
     int code;
+    std::string directory;
 };
 
 
 class ServerCore{
 private:
     std::vector<User> users;
-    std::vector<std::string> adminFiles;
+    std::set<std::string> adminFiles;
     std::map<int, OnlineUser> loggedInUsers;
-    std::string currentDirectory;
-    int maxAllowedConnections;
-    int lastToken;
+    uint maxAllowedConnections;
 
     void ReadUsers(JsonSerializer);
     void ReadAdminFiles(JsonSerializer);
+    bool IsAuthenticated(int);
+    std::vector<std::string> Split(std::string, char)
+    std::string ConvertDirectory(std::string, std::string);
 
 public:
     ServerCore(JsonSerializer);
-    LoginResponse CheckUsername(std::string);
-    int Authenticate(std::string, std::string);
-    int GetCurrentDirectory();
-    int MakeDirectory(std::string);
-    int DeleteFile(std::string);
-    int DeleteDirectory(std::string);
-    int DeleteFile(std::string);
-    std::string ShowList();
-    int ChangeDirectory(std::string);
-    int RenameFile(std::string, std::string);
+    int CheckUsername(std::string, int);
+    int Authenticate(std::string, int);
+    GetDirectoryResponse GetCurrentDirectory(int);
+    int MakeDirectory(std::string, int);
+    int DeleteFile(std::string, int);
+    int DeleteDirectory(std::string, int);
+    std::string ShowList(int);
+    int ChangeDirectory(std::string, int);
+    int RenameFile(std::string, std::string, int);
 };
 #endif

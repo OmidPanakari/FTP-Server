@@ -8,8 +8,11 @@ RM = rm
 all: Server.out Logger.o JsonSerializer.o
 
 
-Server.out: Server.cpp Logger.o JsonSerializer.o
-	$(CC) $(FLAGS) Server.cpp Logger.o JsonSerializer.o -o Server.out
+Server.out: Server.cpp Logger.o JsonSerializer.o ServerCore.o
+	$(CC) $(FLAGS) Server.cpp Logger.o JsonSerializer.o ServerCore.o -o Server.out
+
+ServerCore.o: ServerCore.cpp ServerCore.hpp JsonSerializer.o
+	$(CC) $(FLAGS) ServerCore.cpp JsonSerializer.o -c
 
 Logger.o: Logger.cpp Logger.hpp
 	$(CC) $(FLAGS) Logger.cpp -c
