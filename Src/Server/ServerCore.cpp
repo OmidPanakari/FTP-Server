@@ -1,4 +1,5 @@
 #include "ServerCore.hpp"
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -61,7 +62,7 @@ int ServerCore::Authenticate(string password, int clientID) {
         OnlineUser* onlineUser = &user->second;
         if(onlineUser->user->password == password){
             onlineUser->isAuthenticated = true;
-            onlineUser->directory = "/";
+            onlineUser->directory.clear();
             cout << loggedInUsers[clientID].isAuthenticated << endl;
             return 230;
         }
@@ -84,32 +85,66 @@ vector <string> ServerCore::Split(string str, char c) {
     return result;
 }
 
-string ServerCore::ConvertDirectory(string current, string path) {
-    vector<string> pathWay = Split(path, '/');
-    vector<string> currentWay = Split(current, '/');
-    int pointer;
-    if (path[0] == '/') pointer = 0;
-    else pointer = currentWay.size() - 1;
-    for (int i = 0; i < pathWay.size() - 1; i++) {
-        if (pathWay[i] == ".." && pointer > 0){
-            pointer--;
-        } else if (pathWay[i] != "."){
-            if (pointer == currentWay.size() - 1){
-                currentWay.push_back(pathWay[i]);
-                pointer++;
-            } else {
-                currentWay[i] = pathWay[i];
-                pointer++;
-            }
+string ServerCore::MakeDirStr(vector<string> pathStk)
+{
+    string dir = "";
+    for (string p : pathStk)
+    {
+        dir += "/" + p;
+    }
+    if (dir == "")
+        dir = "/";
+    return "." + dir;
+}
 
+vector<string> ServerCore::ConvertDirectory(vector<string> current, string path) {
+    vector<string> pathWay = Split(path, '/');
+    if (path[0] == '/')
+        current.clear();
+    for (string p : pathWay)
+    {
+        if (p == "..")
+        {
+            if (current.size())
+                current.pop_back();
+        }
+        else if (p != ".")
+        {
+            current.push_back(p);
         }
     }
-
-
+    return current;
 }
+
+bool ServerCore::PathExists(vector<string> path)
+{
+    string dir = MakeDirStr(path);
+    struct stat buffer;
+    return (stat(dir.c_str(), &buffer) == 0);
+}
+
 GetDirectoryResponse ServerCore::GetCurrentDirectory(int clientID) {
-    if (!IsAuthenticated(clientID)) return 332;
-    return {257, loggedInUsers[clientID].directory};
+    if (!IsAuthenticated(clientID)) return {332, ""};
+    string dir = MakeDirStr(loggedInUsers[clientID].directory);
+    return {257, dir};
+}
+
+int ServerCore::MakeDirectory(string path, int clientID)
+{
+    if (!IsAuthenticated(clientID)) return 323;
+    auto dest = ConvertDirectory(loggedInUsers[clientID].directory, path);
+    if (dest.empty())
+        return 500;
+    string newDir = dest.back();
+    if (PathExists(dest))
+        return 500;
+    dest.pop_back();
+    if (!PathExists(dest))
+        return 500;
+    dest.push_back(newDir);
+    if (mkdir(MakeDirStr(dest).c_str(), 0777) == 0)
+        return 257;
+    return 508;
 }
 
 
