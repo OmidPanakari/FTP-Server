@@ -1,5 +1,6 @@
 #include "ServerCore.hpp"
 #include <sys/stat.h>
+#include <filesystem>
 
 using namespace std;
 
@@ -174,7 +175,7 @@ GetDirectoryResponse ServerCore::GetCurrentDirectory(int clientID) {
 
 int ServerCore::MakeDirectory(string path, int clientID)
 {
-    if (!IsAuthenticated(clientID)) return 323;
+    if (!IsAuthenticated(clientID)) return 332;
     auto dest = ConvertDirectory(loggedInUsers[clientID].directory, path);
     if (dest.empty())
         return 500;
@@ -190,6 +191,16 @@ int ServerCore::MakeDirectory(string path, int clientID)
     return 500;
 }
 
+ShowListResponse ServerCore::ShowList(int clientID) {
+    ShowListResponse showListResponse;
+    if (!IsAuthenticated(clientID)) return {332, {}};
+    auto dirStr = MakeDirStr(loggedInUsers[clientID].directory);
+    for (auto entry : filesystem::directory_iterator(dirStr)) {
+        showListResponse.names.push_back(entry.path().filename().string());
+    }
+    showListResponse.code = 226;
+    return showListResponse;
+}
 
 
 

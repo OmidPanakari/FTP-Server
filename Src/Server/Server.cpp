@@ -11,10 +11,10 @@ int main(){
     cout << sc.CheckUsername("Amir", 1) << endl;
     cout << sc.Authenticate("1234", 1) << endl;
     cout << sc.MakeDirectory("../../amir/../ehsan", 1) << endl;
-    sc.ChangeDirectory("ehsan", 1);
     auto resp = sc.GetCurrentDirectory(1);
     cout << resp.code << ' ' << resp.directory << endl;
     sc.RenameFile("1.txt", "2.txt", 1);
+    sc.ShowList(1);
 
     return 0;
 }

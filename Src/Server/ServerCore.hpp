@@ -30,6 +30,12 @@ struct GetDirectoryResponse
     std::string directory;
 };
 
+struct ShowListResponse
+{
+    int code;
+    std::vector<std::string> names;
+};
+
 
 class ServerCore{
 private:
@@ -53,7 +59,7 @@ public:
     GetDirectoryResponse GetCurrentDirectory(int);
     int MakeDirectory(std::string, int);
     int DeleteFileOrDirectory(std::string, int);
-    std::string ShowList(int);
+    ShowListResponse ShowList(int);
     int ChangeDirectory(std::string, int);
     int RenameFile(std::string, std::string, int);
 };
