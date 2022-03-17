@@ -13,5 +13,6 @@ int main(){
     auto resp = sc.GetCurrentDirectory(1);
     cout << resp.code << ' ' << resp.directory << endl;
     cout << sc.MakeDirectory("../../amir/../ehsan", 1) << endl;
+    sc.DeleteFile("/ehsan", 1);
     return 0;
 }

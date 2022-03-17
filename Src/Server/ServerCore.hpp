@@ -52,8 +52,7 @@ public:
     int Authenticate(std::string, int);
     GetDirectoryResponse GetCurrentDirectory(int);
     int MakeDirectory(std::string, int);
-    int DeleteFile(std::string, int);
-    int DeleteDirectory(std::string, int);
+    int DeleteFileOrDirectory(std::string, int);
     std::string ShowList(int);
     int ChangeDirectory(std::string, int);
     int RenameFile(std::string, std::string, int);

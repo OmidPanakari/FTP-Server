@@ -121,6 +121,19 @@ vector<string> ServerCore::ConvertDirectory(vector<string> current, string path)
     return current;
 }
 
+int ServerCore::DeleteFileOrDirectory(std::string path, int clientID) {
+    if (!IsAuthenticated(clientID)) return 332;
+    auto currentDirectory = loggedInUsers[clientID].directory;
+    auto dest = ConvertDirectory(currentDirectory, path);
+    auto destStr = MakeDirStr(dest);
+    if (!PathExists(dest))
+        return 500;
+    if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(destStr) != adminFiles.end())
+        return 500;
+    remove(destStr.c_str());
+    return 250;
+}
+
 bool ServerCore::PathExists(vector<string> path)
 {
     string dir = MakeDirStr(path);
