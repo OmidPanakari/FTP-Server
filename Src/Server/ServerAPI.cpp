@@ -48,43 +48,43 @@ string ServerAPI::CheckUsername(vector <string> command) {
 
 }
 
-std::string ServerAPI::Authenticate(std::vector <std::string> command) {
+string ServerAPI::Authenticate(vector <string> command) {
     if (command.size() != 1) return "501";
 }
 
-std::string ServerAPI::GetCurrentDirectory(std::vector <std::string> command) {
+string ServerAPI::GetCurrentDirectory(vector <string> command) {
     if (command.size() != 0) return "501";
 }
 
-std::string ServerAPI::MakeDirectory(std::vector <std::string> command) {
+string ServerAPI::MakeDirectory(vector <string> command) {
     if (command.size() != 1) return "501";
 }
 
-std::string ServerAPI::DeleteFileOrDirectory(std::vector <std::string> command) {
+string ServerAPI::DeleteFileOrDirectory(vector <string> command) {
     if (command.size() != 2) return "501";
     if (command[0] != "-d" && command[0] != "-f") return "501";
 }
 
-std::string ServerAPI::ShowList(std::vector <std::string> command) {
+string ServerAPI::ShowList(vector <string> command) {
     if (command.size() != 0) return "501";
 }
 
-std::string ServerAPI::ChangeDirectory(std::vector <std::string> command) {
+string ServerAPI::ChangeDirectory(vector <string> command) {
     if (command.size() != 1) return "501";
 }
 
-std::string ServerAPI::RenameFile(std::vector <std::string> command) {
+string ServerAPI::RenameFile(vector <string> command) {
     if (command.size() != 2) return "501";
 }
 
-std::string ServerAPI::DownloadFile(std::vector <std::string> command) {
+string ServerAPI::DownloadFile(vector <string> command) {
     if (command.size() != 1) return "501";
 }
 
-std::string ServerAPI::Help(std::vector <std::string> command) {
+string ServerAPI::Help(vector <string> command) {
     if (command.size() != 0) return "501";
 }
 
-std::string ServerAPI::Quit(std::vector <std::string> command) {
+string ServerAPI::Quit(vector <string> command) {
     if (command.size() != 0) return "501";
 }

@@ -33,6 +33,9 @@ public:
     int GetInteger(std::string);
     std::vector<std::string> GetStrArray(std::string);
     std::vector<int> GetIntArray(std::string);
+    std::string GetJson();
+    void AddItem(std::string, std::string);
+    void AddList(std::string, std::vector<std::string>);
 };
 
 #endif

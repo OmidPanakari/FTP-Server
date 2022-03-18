@@ -2,19 +2,18 @@
 #include "ServerCore.hpp"
 #include "JsonSerializer.hpp"
 #include <iostream>
+#include <vector>
 
 using namespace std;
 int main(){
     JsonSerializer js;
-    js.ReadFile("config.json");
-    ServerCore sc(js);
-    cout << sc.CheckUsername("Amir", 1) << endl;
-    cout << sc.Authenticate("1234", 1) << endl;
-    cout << sc.MakeDirectory("../../amir/../ehsan", 1) << endl;
-    auto resp = sc.GetCurrentDirectory(1);
-    cout << resp.code << ' ' << resp.directory << endl;
-    sc.RenameFile("1.txt", "2.txt", 1);
-    sc.ShowList(1);
+    js.AddItem("Omid", "Kir Nadarad");
+    vector<string> s = {"Omid", "Kir", "Nadarad"};
+    js.AddList("Mammad", s);
+    JsonSerializer jss;
+    jss.ReadJson(js.GetJson());
+    cout << js.GetStrArray("Mammad")[0];
+
 
     return 0;
 }

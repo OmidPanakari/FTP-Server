@@ -285,3 +285,26 @@ vector<int> JsonSerializer::ReadIntArrayItems(string json)
     }
     return res;
 }
+
+void JsonSerializer::AddItem(string key, string value) {
+    dictionary[key] = "\"" + value + "\"";
+}
+
+void JsonSerializer::AddList(string key, vector<string> value) {
+    string stringedValue = "[";
+    for (auto item : value) {
+        stringedValue += "\"" + item + "\"" + ",";
+    }
+    stringedValue[stringedValue.size() - 1] = ']';
+    dictionary[key] = stringedValue;
+}
+
+string JsonSerializer::GetJson() {
+    string result = "{";
+    for (auto item : dictionary){
+        result += "\"" + item.first + "\":"+item.second;
+        result += ",";
+    }
+    result[result.size() - 1] = '}';
+    return result;
+}
