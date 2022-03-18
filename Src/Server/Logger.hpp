@@ -6,6 +6,7 @@
 class Logger{
 private:
     std::string fileName;
+    
     std::string GenerateTime();
 public:
     Logger(std::string);

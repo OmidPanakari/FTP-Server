@@ -4,11 +4,13 @@
 #include <set>
 #include <iostream>
 #include "JsonSerializer.hpp"
+#include "Logger.hpp"
 
 #ifndef FTP_SERVER_SERVERCORE_HPP
 #define FTP_SERVER_SERVERCORE_HPP
 
 #define ROOT "./root"
+#define LOG_FILE "log.txt"
 
 
 struct User{
@@ -43,6 +45,7 @@ private:
     std::set<std::string> adminFiles;
     std::map<int, OnlineUser> loggedInUsers;
     uint maxAllowedConnections;
+    Logger logger;
 
     void ReadUsers(JsonSerializer);
     void ReadAdminFiles(JsonSerializer);
@@ -62,5 +65,6 @@ public:
     ShowListResponse ShowList(int);
     int ChangeDirectory(std::string, int);
     int RenameFile(std::string, std::string, int);
+    int Quit(int);
 };
 #endif
