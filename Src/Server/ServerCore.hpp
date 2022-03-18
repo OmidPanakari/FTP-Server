@@ -10,7 +10,6 @@
 #define FTP_SERVER_SERVERCORE_HPP
 
 #define ROOT "./root"
-#define LOG_FILE "log.txt"
 
 
 struct User{
@@ -45,10 +44,10 @@ private:
     std::set<std::string> adminFiles;
     std::map<int, OnlineUser> loggedInUsers;
     uint maxAllowedConnections;
-    Logger logger;
+    Logger* logger;
 
-    void ReadUsers(JsonSerializer);
-    void ReadAdminFiles(JsonSerializer);
+    void ReadUsers(JsonSerializer*);
+    void ReadAdminFiles(JsonSerializer*);
     bool IsAuthenticated(int);
     std::vector<std::string> Split(std::string, char);
     std::vector<std::string> ConvertDirectory(std::vector<std::string>, std::string);
@@ -56,7 +55,7 @@ private:
     bool PathExists(std::vector<std::string>);
 
 public:
-    ServerCore(JsonSerializer);
+    ServerCore(JsonSerializer*, Logger*);
     int CheckUsername(std::string, int);
     int Authenticate(std::string, int);
     GetDirectoryResponse GetCurrentDirectory(int);

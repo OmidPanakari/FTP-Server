@@ -5,20 +5,29 @@ RM = rm
 
 
 
-all: Server.out Logger.o JsonSerializer.o
+all: Server.out
 
 
-Server.out: Server.cpp Logger.o JsonSerializer.o ServerCore.o
-	$(CC) $(FLAGS) Server.cpp Logger.o JsonSerializer.o ServerCore.o -o Server.out
+Server.out: Server.o ServerAPI.o ServerCore.o Logger.o JsonSerializer.o Utility.o
+	$(CC) $(FLAGS) Server.o Logger.o JsonSerializer.o ServerCore.o ServerAPI.o Utility.o -o Server.out
 
-ServerCore.o: ServerCore.cpp ServerCore.hpp JsonSerializer.o
-	$(CC) $(FLAGS) ServerCore.cpp JsonSerializer.o -c
+Server.o: Server.cpp ServerAPI.hpp ServerCore.hpp
+	$(CC) $(FLAGS) Server.cpp -c
+
+ServerAPI.o: ServerAPI.cpp ServerAPI.hpp Logger.hpp JsonSerializer.hpp ServerAPI.hpp Utility.hpp
+	$(CC) $(FLAGS) ServerAPI.cpp -c
+
+ServerCore.o: ServerCore.cpp ServerCore.hpp JsonSerializer.hpp Logger.hpp Utility.hpp
+	$(CC) $(FLAGS) ServerCore.cpp -c
 
 Logger.o: Logger.cpp Logger.hpp
 	$(CC) $(FLAGS) Logger.cpp -c
 
 JsonSerializer.o: JsonSerializer.cpp JsonSerializer.hpp
 	$(CC) $(FLAGS) JsonSerializer.cpp -c
+
+Utility.o: Utility.cpp Utility.hpp
+	$(CC) $(FLAGS) Utility.cpp -c
 
 
 

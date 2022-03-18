@@ -1,4 +1,5 @@
 {
+    "logFile" : "log.txt",
     "privilegedFiles" : [
 
     ],
