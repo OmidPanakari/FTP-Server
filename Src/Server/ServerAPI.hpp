@@ -3,6 +3,12 @@
 #include "JsonSerializer.hpp"
 #include <string>
 #include <vector>
+#include <set>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #ifndef FTP_SERVER_SERVERAPI_HPP
 #define FTP_SERVER_SERVERAPI_HPP
@@ -32,11 +38,23 @@
 #define UNAUTHORIZED_ERROR_MESSAGE "332: Need account for login."
 #define PERMISSION_DENIED_ERROR_MESSAGE "550: File unavailable."
 
+struct Socket {
+    int port, FD;
+    struct sockaddr_in address;
+    fd_set readSet, workingReadSet,
+        writeSet, workingWriteSet;
+    int maxFD;
+};
+
 class ServerAPI{
 private:
     ServerCore* serverCore;
     JsonSerializer* jsonSerializer;
     Logger* logger;
+    uint maxAllowedConnections;
+    std::set<int> clients;
+    Socket requestSocket, dataSocket;
+    int newClientFD;
 
     JsonSerializer MakeResponse(std::string, bool);
     std::string CheckUsername(std::vector<std::string>, int);
@@ -50,6 +68,10 @@ private:
     std::string ShowList(std::vector<std::string>, int);
     std::string Help(std::vector<std::string>, int);
     std::string Quit(std::vector<std::string>, int);
+
+    void SetupSockets();
+    void StartListening();
+    void HandleRequests();
 
 public:
     ServerAPI();

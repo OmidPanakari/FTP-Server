@@ -1,13 +1,18 @@
 #include "ServerAPI.hpp"
 #include "Utility.hpp"
 
+
 using namespace std;
 
 ServerAPI::ServerAPI() {
-    this->jsonSerializer = new JsonSerializer();
+    jsonSerializer = new JsonSerializer();
     jsonSerializer->ReadFile(CONFIGFILE);
     this->logger = new Logger(jsonSerializer->Get("logFile"));
     this->serverCore = new ServerCore(jsonSerializer, logger);
+    maxAllowedConnections = jsonSerializer->GetInteger("maxAllowedConnections");
+    requestSocket.port = jsonSerializer->GetInteger("requestPort");
+    dataSocket.port = jsonSerializer->GetInteger("dataPort");
+    newClientFD = -1;
 }
 
 JsonSerializer ServerAPI::MakeResponse(string message, bool isSuccess = false) {
@@ -189,5 +194,71 @@ string ServerAPI::Quit(vector <string> command, int clientID) {
             return MakeResponse(QUIT_OK, true).GetJson();
         default:
             return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
+    }
+}
+
+void ServerAPI::SetupSockets() {
+    requestSocket.FD = socket(AF_INET, SOCK_STREAM, 0);
+    dataSocket.FD = socket(AF_INET, SOCK_STREAM, 0);
+    
+    int opt = 1;
+    setsockopt(requestSocket.FD, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
+    setsockopt(dataSocket.FD, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
+
+    requestSocket.address.sin_family = AF_INET;
+    requestSocket.address.sin_addr.s_addr = INADDR_ANY;
+    requestSocket.address.sin_port = htons(requestSocket.port); 
+    dataSocket.address.sin_family = AF_INET;
+    dataSocket.address.sin_addr.s_addr = INADDR_ANY;
+    dataSocket.address.sin_port = htons(dataSocket.port); 
+
+    bind(requestSocket.FD, (struct  sockaddr *)&requestSocket.address, sizeof(requestSocket.address));
+    bind(dataSocket.FD, (struct  sockaddr *)&dataSocket.address, sizeof(dataSocket.address));
+}
+
+void ServerAPI::StartListening() {
+    listen(requestSocket.FD, maxAllowedConnections);
+    listen(dataSocket.FD, maxAllowedConnections);
+
+    FD_ZERO(&(requestSocket.readSet));
+    FD_ZERO(&(requestSocket.writeSet));
+    FD_ZERO(&(dataSocket.readSet));
+    FD_ZERO(&(dataSocket.writeSet));
+    FD_SET(requestSocket.FD, &(requestSocket.readSet));
+    FD_SET(dataSocket.FD, &(dataSocket.readSet));
+}
+
+void ServerAPI::HandleRequests() {
+    for (int i = 0; i < requestSocket.maxFD; i++)
+    {
+        if (FD_ISSET(i, &(requestSocket.workingReadSet))) {
+            if (i == requestSocket.FD) {
+                if (newClientFD == -1) {
+                    struct sockaddr_in clientAddress;
+                    int addressLen = sizeof(clientAddress);
+                    newClientFD = accept(requestSocket.FD, (struct sockaddr *)&clientAddress, (socklen_t *)&addressLen);
+                    clients.insert(newClientFD);
+                }
+            }
+            else {
+                
+            }
+        }
+    }
+}
+
+void ServerAPI::Run() {
+    logger->Log("Initializing server.");
+    SetupSockets();
+    StartListening();
+    logger->Log("Started listening for clients");
+    while (true) {
+        requestSocket.workingReadSet = requestSocket.readSet;
+        dataSocket.workingReadSet = dataSocket.readSet;
+        requestSocket.workingWriteSet = requestSocket.writeSet;
+        dataSocket.workingWriteSet = dataSocket.writeSet;
+        select(requestSocket.maxFD + 1, &(requestSocket.workingReadSet), &(requestSocket.workingWriteSet), NULL, NULL);
+        HandleRequests();
+        select(dataSocket.maxFD + 1, &(dataSocket.workingReadSet), &(dataSocket.workingWriteSet), NULL, NULL);
     }
 }
