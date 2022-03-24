@@ -3,6 +3,7 @@
 #include "JsonSerializer.hpp"
 #include <string>
 #include <vector>
+#include <map>
 #include <set>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -38,12 +39,17 @@
 #define UNAUTHORIZED_ERROR_MESSAGE "332: Need account for login."
 #define PERMISSION_DENIED_ERROR_MESSAGE "550: File unavailable."
 
+#define MAX_BUF_SIZE 512
+
 struct Socket {
     int port, FD;
     struct sockaddr_in address;
-    fd_set readSet, workingReadSet,
-        writeSet, workingWriteSet;
-    int maxFD;
+};
+
+struct Client {
+    int dataFD;
+    std::string message, fileName;
+    bool isDownloading;
 };
 
 class ServerAPI{
@@ -52,9 +58,12 @@ private:
     JsonSerializer* jsonSerializer;
     Logger* logger;
     uint maxAllowedConnections;
-    std::set<int> clients;
+    std::map<int, Client> clients;
+    std::set<int> unmappedClients;
     Socket requestSocket, dataSocket;
-    int newClientFD;
+    int maxFD;
+    fd_set readSet, writeSet, workingReadSet, workingWriteSet;
+    char buf[MAX_BUF_SIZE];
 
     JsonSerializer MakeResponse(std::string, bool);
     std::string CheckUsername(std::vector<std::string>, int);
@@ -72,6 +81,14 @@ private:
     void SetupSockets();
     void StartListening();
     void HandleRequests();
+    void AcceptClient();
+    void AcceptDataClient();
+    void AnswerRequest(int);
+    void SendMessage(int);
+    void MapDataClient(int);
+    void StartDownload(int);
+    void SendData(int);
+    void HandleDownloads();
 
 public:
     ServerAPI();

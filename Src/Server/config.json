@@ -15,6 +15,7 @@
             "isAdmin" : "False"
         }
     ],
-    "maxAllowedConnections" : "10"
-    
+    "maxAllowedConnections" : "10",
+    "requestPort" : "5000",
+    "dataPort" : "5001"
 }

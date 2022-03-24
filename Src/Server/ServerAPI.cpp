@@ -1,5 +1,6 @@
 #include "ServerAPI.hpp"
 #include "Utility.hpp"
+#include <cstring>
 
 
 using namespace std;
@@ -12,7 +13,6 @@ ServerAPI::ServerAPI() {
     maxAllowedConnections = jsonSerializer->GetInteger("maxAllowedConnections");
     requestSocket.port = jsonSerializer->GetInteger("requestPort");
     dataSocket.port = jsonSerializer->GetInteger("dataPort");
-    newClientFD = -1;
 }
 
 JsonSerializer ServerAPI::MakeResponse(string message, bool isSuccess = false) {
@@ -220,30 +220,103 @@ void ServerAPI::StartListening() {
     listen(requestSocket.FD, maxAllowedConnections);
     listen(dataSocket.FD, maxAllowedConnections);
 
-    FD_ZERO(&(requestSocket.readSet));
-    FD_ZERO(&(requestSocket.writeSet));
-    FD_ZERO(&(dataSocket.readSet));
-    FD_ZERO(&(dataSocket.writeSet));
-    FD_SET(requestSocket.FD, &(requestSocket.readSet));
-    FD_SET(dataSocket.FD, &(dataSocket.readSet));
+    FD_ZERO(&readSet);
+    FD_ZERO(&writeSet);
+    FD_SET(requestSocket.FD, &readSet);
+    FD_SET(dataSocket.FD, &readSet);
+}
+
+void ServerAPI::AcceptClient() {
+    struct sockaddr_in clientAddress;
+    int addressLen = sizeof(clientAddress);
+    int newClientFD = accept(requestSocket.FD, (struct sockaddr *)&clientAddress, (socklen_t *)&addressLen);
+    maxFD = max(maxFD, newClientFD);
+    Client newClient;
+    newClient.dataFD = -1;
+    newClient.message = "";
+    newClient.isDownloading = false;
+    clients[newClientFD] = newClient;
+    FD_SET(newClientFD, &readSet);
+    logger->Log("New client was connected to server.");
+}
+
+void ServerAPI::AcceptDataClient() {
+    struct sockaddr_in clientAddress;
+    int addressLen = sizeof(clientAddress);
+    int newClientFD = accept(dataSocket.FD, (struct sockaddr *)&clientAddress, (socklen_t *)&addressLen);
+    maxFD = max(maxFD, newClientFD);
+    unmappedClients.insert(newClientFD);
+    FD_SET(newClientFD, &readSet);
+}
+
+void ServerAPI::AnswerRequest(int clientFD) {
+    recv(clientFD, buf, MAX_BUF_SIZE, 0);
+    string request(buf);
+    string response = HandleCommand(request, clientFD);
+    Client client = clients[clientFD];
+    client.message = response;
+    FD_CLR(clientFD, &readSet);
+    FD_SET(clientFD, &writeSet);
+}
+
+void ServerAPI::SendMessage(int clientFD) {
+    string message = clients[clientFD].message;
+    send(clientFD, message.c_str(), strlen(message.c_str()), 0);
+    FD_CLR(clientFD, &writeSet);
+    Client client = clients[clientFD];
+    if (client.isDownloading)
+        FD_SET(client.dataFD, &writeSet);
+    else
+        FD_SET(clientFD, &readSet);
+
+}
+
+void ServerAPI::MapDataClient(int clientDataFD)
+{
+    recv(clientDataFD, buf, MAX_BUF_SIZE, 0);
+    int clientFD = atoi(buf);
+    if (clients.find(clientFD) != clients.end()) {
+        clients[clientFD].dataFD = clientDataFD;
+        unmappedClients.erase(clientDataFD);
+        FD_CLR(clientDataFD, &readSet);
+        FD_SET(clientFD, &readSet);
+    }
+}
+
+void ServerAPI::StartDownload(int clientFD) {
+    recv(clientFD, buf, MAX_BUF_SIZE, 0);
+    FD_CLR(clientFD, &readSet);
+    FD_SET(clientFD, &writeSet);
+}
+
+void ServerAPI::SendData(int clientFD) {
+    Client client = clients[clientFD];
 }
 
 void ServerAPI::HandleRequests() {
-    for (int i = 0; i < requestSocket.maxFD; i++)
-    {
-        if (FD_ISSET(i, &(requestSocket.workingReadSet))) {
-            if (i == requestSocket.FD) {
-                if (newClientFD == -1) {
-                    struct sockaddr_in clientAddress;
-                    int addressLen = sizeof(clientAddress);
-                    newClientFD = accept(requestSocket.FD, (struct sockaddr *)&clientAddress, (socklen_t *)&addressLen);
-                    clients.insert(newClientFD);
-                }
-            }
-            else {
-                
-            }
-        }
+    if (FD_ISSET(requestSocket.FD, &workingReadSet))
+        AcceptClient();
+    for (auto client : clients) {
+        if (FD_ISSET(client.first, &workingReadSet)) 
+            AnswerRequest(client.first);
+        if (FD_ISSET(client.first, &workingWriteSet))
+            SendMessage(client.first);
+    }
+}
+
+void ServerAPI::HandleDownloads() {
+    if (FD_ISSET(dataSocket.FD, &workingReadSet))
+        AcceptDataClient();
+    for (int clientFD : unmappedClients) {
+        if (FD_ISSET(clientFD, &workingReadSet)) 
+            MapDataClient(clientFD);
+    }
+    for (auto client : clients) {
+        int dataFD = client.second.dataFD;
+        if (FD_ISSET(dataFD, &workingReadSet))
+            StartDownload(dataFD);
+        if (FD_ISSET(dataFD, &workingWriteSet))
+            SendData(client.first);
     }
 }
 
@@ -253,12 +326,10 @@ void ServerAPI::Run() {
     StartListening();
     logger->Log("Started listening for clients");
     while (true) {
-        requestSocket.workingReadSet = requestSocket.readSet;
-        dataSocket.workingReadSet = dataSocket.readSet;
-        requestSocket.workingWriteSet = requestSocket.writeSet;
-        dataSocket.workingWriteSet = dataSocket.writeSet;
-        select(requestSocket.maxFD + 1, &(requestSocket.workingReadSet), &(requestSocket.workingWriteSet), NULL, NULL);
+        workingReadSet = readSet;
+        workingWriteSet = writeSet;
+        select(maxFD + 1, &workingReadSet, &workingWriteSet, NULL, NULL);
         HandleRequests();
-        select(dataSocket.maxFD + 1, &(dataSocket.workingReadSet), &(dataSocket.workingWriteSet), NULL, NULL);
+        HandleDownloads();
     }
 }

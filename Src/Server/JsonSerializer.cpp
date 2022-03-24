@@ -19,7 +19,8 @@ void JsonSerializer::ReadJsonItem(string item)
 
 void JsonSerializer::ReadJsonItems(string json)
 {
-    int curlyCnt = 0, bracCnt = 0, quotCnt = 0, i = 0;
+    int curlyCnt = 0, bracCnt = 0, quotCnt = 0;
+    uint i = 0;
     string item = "";
     while (i != json.size())
     {
@@ -60,7 +61,7 @@ void JsonSerializer::ReadJsonItems(string json)
 void JsonSerializer::ReadJson(string json)
 {
     int start = -1, end = -1;
-    for (int i = 0; i < json.size(); i++)
+    for (uint i = 0; i < json.size(); i++)
     {
         if (json[i] == LCURLY)
         {
@@ -68,7 +69,7 @@ void JsonSerializer::ReadJson(string json)
             break;
         }
     }
-    for (int i = json.size() - 1; i >= 0; i--)
+    for (uint i = json.size() - 1; i >= 0; i--)
     {
         if(json[i] == RCURLY)
         {
@@ -98,7 +99,8 @@ JsonSerializer JsonSerializer::GetSection(string key)
 
 vector<JsonSerializer> JsonSerializer::ReadArrayItems(string json)
 {
-    int curlyCnt = 0, bracCnt = 0, quotCnt = 0, i = 0;
+    int curlyCnt = 0, bracCnt = 0, quotCnt = 0;
+    uint i = 0;
     string item = "";
     vector<JsonSerializer> result;
     while (i != json.size())
@@ -148,7 +150,7 @@ vector<JsonSerializer> JsonSerializer::GetArray(string key)
 {
     int start = -1, end = -1;
     string json = dictionary[key];
-    for (int i = 0; i < json.size(); i++)
+    for (uint i = 0; i < json.size(); i++)
     {
         if (json[i] == LBRAC)
         {
@@ -156,7 +158,7 @@ vector<JsonSerializer> JsonSerializer::GetArray(string key)
             break;
         }
     }
-    for (int i = json.size() - 1; i >= 0; i--)
+    for (uint i = json.size() - 1; i >= 0; i--)
     {
         if(json[i] == RBRAC)
         {
@@ -189,7 +191,7 @@ vector<string> JsonSerializer::GetStrArray(string key)
 {
     int start = -1, end = -1;
     string json = dictionary[key];
-    for (int i = 0; i < json.size(); i++)
+    for (uint i = 0; i < json.size(); i++)
     {
         if (json[i] == LBRAC)
         {
@@ -212,7 +214,7 @@ vector<int> JsonSerializer::GetIntArray(string key)
 {
     int start = -1, end = -1;
     string json = dictionary[key];
-    for (int i = 0; i < json.size(); i++)
+    for (uint i = 0; i < json.size(); i++)
     {
         if (json[i] == LBRAC)
         {
@@ -233,7 +235,8 @@ vector<int> JsonSerializer::GetIntArray(string key)
 
 vector<string> JsonSerializer::ReadStrArrayItems(string json)
 {
-    int curlyCnt = 0, bracCnt = 0, quotCnt = 0, i = 0;
+    int curlyCnt = 0, bracCnt = 0, quotCnt = 0;
+    uint i = 0;
     string item = "";
     vector<string> result;
     while (i != json.size())
