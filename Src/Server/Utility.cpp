@@ -1,4 +1,5 @@
 #include "Utility.hpp"
+#include <sstream>
 
 using namespace std;
 
@@ -14,4 +15,10 @@ vector<string> Utility::Split(string str, char c) {
     }
     if (!temp.empty()) result.push_back(temp);
     return result;
+}
+
+string Utility::ToStr(int n) {
+    stringstream ss;
+    ss << n;
+    return ss.str();
 }

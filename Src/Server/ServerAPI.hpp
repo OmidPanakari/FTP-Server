@@ -23,7 +23,6 @@
 #define CWD "cwd"
 #define RENAME "rename"
 #define RETR "retr"
-#define HELP "help"
 #define QUIT "quit"
 #define CONFIGFILE "config.json"
 
@@ -39,7 +38,7 @@
 #define UNAUTHORIZED_ERROR_MESSAGE "332: Need account for login."
 #define PERMISSION_DENIED_ERROR_MESSAGE "550: File unavailable."
 
-#define MAX_BUF_SIZE 512
+#define MAX_BUF_SIZE 2048
 
 struct Socket {
     int port, FD;
@@ -47,8 +46,9 @@ struct Socket {
 };
 
 struct Client {
-    int dataFD;
-    std::string message, fileName;
+    int dataFD, fileLen;
+    std::string message;
+    std::vector<std::string> contentParts;
     bool isDownloading;
 };
 
@@ -66,24 +66,23 @@ private:
     char buf[MAX_BUF_SIZE];
 
     JsonSerializer MakeResponse(std::string, bool);
-    std::string CheckUsername(std::vector<std::string>, int);
-    std::string Authenticate(std::vector<std::string>, int);
-    std::string MakeDirectory(std::vector<std::string>, int);
-    std::string DeleteFileOrDirectory(std::vector<std::string>, int);
-    std::string ChangeDirectory(std::vector<std::string>, int);
-    std::string RenameFile(std::vector<std::string>, int);
-    std::string DownloadFile(std::vector<std::string>, int);
-    std::string GetCurrentDirectory(std::vector<std::string>, int);
-    std::string ShowList(std::vector<std::string>, int);
-    std::string Help(std::vector<std::string>, int);
-    std::string Quit(std::vector<std::string>, int);
+    std::string CheckUsername(JsonSerializer, int);
+    std::string Authenticate(JsonSerializer, int);
+    std::string MakeDirectory(JsonSerializer, int);
+    std::string DeleteFileOrDirectory(JsonSerializer, int);
+    std::string ChangeDirectory(JsonSerializer, int);
+    std::string RenameFile(JsonSerializer, int);
+    std::string DownloadFile(JsonSerializer, int);
+    std::string GetCurrentDirectory(int);
+    std::string ShowList(int);
+    std::string Quit(int);
 
     void SetupSockets();
     void StartListening();
     void HandleRequests();
     void AcceptClient();
     void AcceptDataClient();
-    void AnswerRequest(int);
+    void GetRequest(int);
     void SendMessage(int);
     void MapDataClient(int);
     void StartDownload(int);
@@ -93,6 +92,6 @@ private:
 public:
     ServerAPI();
     void Run();
-    std::string HandleCommand(std::string, int);
+    std::string HandleRequest(std::string, int);
 };
 #endif

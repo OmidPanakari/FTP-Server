@@ -12,7 +12,7 @@
 
 #define CONFIGFILE "config.json"
 #define DOWNLOAD_DIR "./download"
-#define MAX_BUF_SIZE 1024
+#define MAX_BUF_SIZE 2048
 
 #define USER "user"
 #define PASS "pass"

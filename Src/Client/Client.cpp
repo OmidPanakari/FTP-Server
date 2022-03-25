@@ -2,6 +2,7 @@
 #include "Utility.hpp"
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -10,6 +11,10 @@ Client::Client() {
     config.ReadFile(CONFIGFILE);
     requestPort = config.GetInteger("requestPort");
     dataPort = config.GetInteger("dataPort");
+    struct stat buffer;
+    if (stat(DOWNLOAD_DIR, &buffer) != 0) {
+        mkdir(DOWNLOAD_DIR, 0777);
+    }
 }
 
 void Client::ConnectServer() {
@@ -22,6 +27,7 @@ void Client::ConnectServer() {
     requestAddress.sin_port = htons(requestPort);
     requestAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
     dataAddress = requestAddress;
+    dataAddress.sin_port = htons(dataPort);
 
     if (connect(requestFD, (struct sockaddr *)&requestAddress, sizeof(requestAddress)) < 0) {
         cout << "Cannot connect to request socket!" << endl;
@@ -31,6 +37,7 @@ void Client::ConnectServer() {
         cout << "Cannot connect to data socket!" << endl;
     }
 
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     send(dataFD, buf, strlen(buf), 0);
 
@@ -38,10 +45,13 @@ void Client::ConnectServer() {
 }
 
 void Client::DownloadFile(string filename) {
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(dataFD, buf, MAX_BUF_SIZE, 0);
     int fileSize = atoi(buf);
+    send(dataFD, "OK", strlen("OK"), 0);
     string content = "";
     for (int i = 0; i < (fileSize + MAX_BUF_SIZE - 1) / MAX_BUF_SIZE; i++) {
+        memset(buf, 0, MAX_BUF_SIZE);
         recv(dataFD, buf, MAX_BUF_SIZE, 0);
         content += buf;
     }
@@ -105,6 +115,7 @@ void Client::CheckUsername(vector <string> command) {
     requestSerializer.AddItem("username", command[0]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -116,6 +127,7 @@ void Client::CheckUsername(vector <string> command) {
             break;
         case 331:
             cout << USER_OK << endl;
+            break;
         case 430:
             cout << INVALID_CREDENTIALS_ERROR_MESSAGE << endl;
             break;
@@ -135,6 +147,7 @@ void Client::Authenticate(vector <string> command) {
     requestSerializer.AddItem("password", command[0]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -165,6 +178,7 @@ void Client::GetCurrentDirectory(vector <string> command) {
     requestSerializer.AddItem("method", PWD);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -193,6 +207,7 @@ void Client::MakeDirectory(vector <string> command) {
     requestSerializer.AddItem("path", command[0]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -221,6 +236,7 @@ void Client::DeleteFileOrDirectory(vector <string> command) {
     requestSerializer.AddItem("path", command[1]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -232,7 +248,7 @@ void Client::DeleteFileOrDirectory(vector <string> command) {
             break;
         case 250:
            cout << "250: " + command[1] + " deleted." << endl;
-           break;
+            break;
         case 550:
             cout << PERMISSION_DENIED_ERROR_MESSAGE << endl;
             break;
@@ -251,6 +267,7 @@ void Client::ShowList(vector <string> command) {
     requestSerializer.AddItem("method", LS);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -282,6 +299,7 @@ void Client::ChangeDirectory(vector <string> command) {
     requestSerializer.AddItem("path", command[0]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -311,6 +329,7 @@ void Client::RenameFile(vector <string> command) {
     requestSerializer.AddItem("newPath", command[1]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -339,9 +358,10 @@ void Client::GetFile(vector <string> command) {
 
     JsonSerializer requestSerializer;
     requestSerializer.AddItem("method", RETR);
-    requestSerializer.AddItem("path", command[0]);
+    requestSerializer.AddItem("filename", command[0]);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -391,6 +411,7 @@ void Client::Quit(vector <string> command) {
     requestSerializer.AddItem("method", QUIT);
     string request = requestSerializer.GetJson();
     send(requestFD, request.c_str(), strlen(request.c_str()), 0);
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(requestFD, buf, MAX_BUF_SIZE, 0);
     string response(buf);
     JsonSerializer responseDeserializer;
@@ -400,7 +421,7 @@ void Client::Quit(vector <string> command) {
         case 332:
             cout << UNAUTHORIZED_ERROR_MESSAGE << endl;
             break;
-        case 250:
+        case 221:
             cout << QUIT_OK << endl;
             break;
         default:
@@ -413,7 +434,7 @@ void Client::Run() {
     ConnectServer();
     string command;
     while (true) {
-        cin >> command;
+        getline(cin, command);
         HandleCommand(command);
     }
 }

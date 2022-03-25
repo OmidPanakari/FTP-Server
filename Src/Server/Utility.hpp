@@ -7,6 +7,7 @@
 class Utility{
 public:
     std::vector<std::string> static Split(std::string, char);
+    std::string static ToStr(int);
 };
 
 #endif

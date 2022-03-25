@@ -118,7 +118,6 @@ int ServerCore::Authenticate(string password, int clientID) {
         if(onlineUser->user->password == password) {
             onlineUser->isAuthenticated = true;
             onlineUser->directory.clear();
-            cout << loggedInUsers[clientID].isAuthenticated << endl;
             logger->Log("User " + onlineUser->user->username + " authenticated.");
             return 230;
         }
@@ -250,12 +249,34 @@ int ServerCore::RenameFile(std::string path, std::string newPath, int clientID) 
     return 500;
 }
 
+GetFileResponse ServerCore::GetFile(string filename, int clientID) {
+    if (!IsAuthenticated(clientID)) {
+        logger->Log("Unauthorized request.");
+        return {332, ""};
+    }
+    auto currentDirectory = loggedInUsers[clientID].directory;
+    auto dest = ConvertDirectory(currentDirectory, filename);
+    if (!PathExists(dest)) {
+        logger->Log("User " + loggedInUsers[clientID].user->username + " desired file doesn't exist in this directory.");
+        return {332, ""};
+    }
+    auto destStr = MakeDirStr(dest);
+    ifstream file(destStr);
+    string content = string((istreambuf_iterator<char>(file)), (istreambuf_iterator<char>()));
+    file.close();
+    GetFileResponse response;
+    response.code = 226;
+    response.content = content;
+    return response;
+}
+
 int ServerCore::Quit(int clientID) {
     if (!IsAuthenticated(clientID)) {
         logger->Log("Unauthorized request.");
         return 332;
     }
+    string username = loggedInUsers[clientID].user->username;
     loggedInUsers.erase(clientID);
-    logger->Log("User " + loggedInUsers[clientID].user->username + " logged out.");
+    logger->Log("User " + username + " logged out.");
     return 221;
 }

@@ -22,184 +22,127 @@ JsonSerializer ServerAPI::MakeResponse(string message, bool isSuccess = false) {
     return js;
 }
 
-string ServerAPI::HandleCommand(string command, int clientID) {
-    vector<string> commandVector = Utility::Split(command, ' ');
-    if (commandVector.size() < 1) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    if (commandVector[0] == USER){
-        commandVector.erase(commandVector.begin());
-        return CheckUsername(commandVector, clientID);
-    } else if (commandVector[0] == PASS){
-        commandVector.erase(commandVector.begin());
-        return Authenticate(commandVector, clientID);
-    } else if (commandVector[0] == PWD){
-        commandVector.erase(commandVector.begin());
-        return GetCurrentDirectory(commandVector, clientID);
-    } else if (commandVector[0] == MKD){
-        commandVector.erase(commandVector.begin());
-        return MakeDirectory(commandVector, clientID);
-    } else if(commandVector[0] == DELE){
-        commandVector.erase(commandVector.begin());
-        return DeleteFileOrDirectory(commandVector, clientID);
-    } else if(commandVector[0] == LS){
-        commandVector.erase(commandVector.begin());
-        return ShowList(commandVector, clientID);
-    } else if (commandVector[0] == CWD){
-        commandVector.erase(commandVector.begin());
-        return ChangeDirectory(commandVector, clientID);
-    } else if(commandVector[0] == RENAME){
-        commandVector.erase(commandVector.begin());
-        return RenameFile(commandVector, clientID);
-    } else if (commandVector[0] == RETR){
-        commandVector.erase(commandVector.begin());
-        return DownloadFile(commandVector, clientID);
-    } else if (commandVector[0] == HELP){
-        commandVector.erase(commandVector.begin());
-        return Help(commandVector, clientID);
-    } else if(commandVector[0] == QUIT){
-        commandVector.erase(commandVector.begin());
-        return Quit(commandVector, clientID);
-    } else return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-}
-
-
-string ServerAPI::CheckUsername(vector <string> command, int clientID) {
-    if (command.size() != 1) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    int response = serverCore->CheckUsername(command[0], clientID);
-    switch (response) {
-        case 425:
-            return MakeResponse(MAXIMUM_USERS_ERROR_MESSAGE).GetJson();
-        case 331:
-            return MakeResponse(USER_OK, true).GetJson();
-        case 430:
-            return MakeResponse(INVALID_CREDENTIALS_ERROR_MESSAGE).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
+string ServerAPI::HandleRequest(string request, int clientID) {
+    try {
+        JsonSerializer requestDeserializer;
+        requestDeserializer.ReadJson(request);
+        if (requestDeserializer.Get("method") == USER) {
+            return CheckUsername(requestDeserializer, clientID);
+        } else if (requestDeserializer.Get("method") == PASS) {
+            return Authenticate(requestDeserializer, clientID);
+        } else if (requestDeserializer.Get("method") == PWD) {
+            return GetCurrentDirectory(clientID);
+        } else if (requestDeserializer.Get("method") == MKD){
+            return MakeDirectory(requestDeserializer, clientID);
+        } else if(requestDeserializer.Get("method") == DELE){
+            return DeleteFileOrDirectory(requestDeserializer, clientID);
+        } else if(requestDeserializer.Get("method") == LS){
+            return ShowList(clientID);
+        } else if (requestDeserializer.Get("method") == CWD){
+            return ChangeDirectory(requestDeserializer, clientID);
+        } else if(requestDeserializer.Get("method") == RENAME){
+            return RenameFile(requestDeserializer, clientID);
+        } else if (requestDeserializer.Get("method") == RETR){
+            return DownloadFile(requestDeserializer, clientID);
+        } else if(requestDeserializer.Get("method") == QUIT){
+            return Quit(clientID);
+        } else {
+            JsonSerializer responseSerializer;
+            responseSerializer.AddItem("code", "500");
+            return responseSerializer.GetJson();
+        }
+    }
+    catch (...) {
+        JsonSerializer responseSerializer;
+        responseSerializer.AddItem("code", "500");
+        return responseSerializer.GetJson();
     }
 }
 
-string ServerAPI::Authenticate(vector <string> command, int clientID) {
-    if (command.size() != 1) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    int response = serverCore->Authenticate(command[0], clientID);
-    switch (response) {
-        case 230:
-            return MakeResponse(USER_OK, true).GetJson();
-        case 503:
-            return MakeResponse(BAD_SEQUENCE_ERROR_MESSAGE).GetJson();
-        case 430:
-            return MakeResponse(INVALID_CREDENTIALS_ERROR_MESSAGE).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
+
+string ServerAPI::CheckUsername(JsonSerializer requestDeserializer, int clientID) {
+    int response = serverCore->CheckUsername(requestDeserializer.Get("username"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
 }
 
-string ServerAPI::GetCurrentDirectory(vector <string> command, int clientID) {
-    if (command.size() != 0) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
+string ServerAPI::Authenticate(JsonSerializer requestDeserializer, int clientID) {
+    int response = serverCore->Authenticate(requestDeserializer.Get("password"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
+}
+
+string ServerAPI::GetCurrentDirectory(int clientID) {
     GetDirectoryResponse response = serverCore->GetCurrentDirectory(clientID);
-    switch (response.code) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 257:
-            return MakeResponse("257: "+response.directory, true).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response.code));
+    responseSerializer.AddItem("directory", response.directory);
+    return responseSerializer.GetJson();
 }
 
-string ServerAPI::MakeDirectory(vector <string> command, int clientID) {
-    if (command.size() != 1) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    int response = serverCore->MakeDirectory(command[0], clientID);
-    switch (response) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 257:
-            return MakeResponse("257: "+command[0] + " created.", true).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
+string ServerAPI::MakeDirectory(JsonSerializer requestDeserializer, int clientID) {
+    int response = serverCore->MakeDirectory(requestDeserializer.Get("path"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
 }
 
-string ServerAPI::DeleteFileOrDirectory(vector <string> command, int clientID) {
-    if (command.size() != 2) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    if (command[0] != "-d" && command[0] != "-f") return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    int response = serverCore->MakeDirectory(command[0], clientID);
-    switch (response) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 250:
-            return MakeResponse("250: " + command[0] + " deleted.", true).GetJson();
-        case 550:
-            return MakeResponse(PERMISSION_DENIED_ERROR_MESSAGE).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
+string ServerAPI::DeleteFileOrDirectory(JsonSerializer requestDeserializer, int clientID) {
+    int response = serverCore->DeleteFileOrDirectory(requestDeserializer.Get("path"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
 }
 
-string ServerAPI::ShowList(vector <string> command, int clientID) {
-    if (command.size() != 0) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
+string ServerAPI::ShowList(int clientID) {
     ShowListResponse response = serverCore->ShowList(clientID);
-    switch (response.code) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 226:
-            return MakeResponse(LIST_TRANSFER_OK, true).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response.code));
+    responseSerializer.AddList("names", response.names);
+    return responseSerializer.GetJson();
+}
+
+string ServerAPI::ChangeDirectory(JsonSerializer requestDeserializer, int clientID) {
+    int response = serverCore->ChangeDirectory(requestDeserializer.Get("path"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
+}
+
+string ServerAPI::RenameFile(JsonSerializer requestDeserializer, int clientID) {
+    int response = serverCore->RenameFile(requestDeserializer.Get("path"), requestDeserializer.Get("newPath"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
+}
+
+string ServerAPI::DownloadFile(JsonSerializer requestDeserializer, int clientID) {
+    GetFileResponse response = serverCore->GetFile(requestDeserializer.Get("filename"), clientID);
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response.code));
+    clients[clientID].isDownloading = true;
+    vector<string> contentParts;
+    for (uint i = 0; i < response.content.size(); i += MAX_BUF_SIZE) {
+        contentParts.push_back(response.content.substr(i, MAX_BUF_SIZE));
     }
-    //TODO:send list data through channel
+    clients[clientID].contentParts = contentParts;
+    clients[clientID].fileLen = strlen(response.content.c_str());
+    return responseSerializer.GetJson();
 }
 
-string ServerAPI::ChangeDirectory(vector <string> command, int clientID) {
-    if (command.size() != 1) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    int response = serverCore->ChangeDirectory(command[0], clientID);
-    switch (response) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 250:
-            return MakeResponse("250: Successful change.", true).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
-}
-
-string ServerAPI::RenameFile(vector <string> command, int clientID) {
-    if (command.size() != 2) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-    int response = serverCore->RenameFile(command[0], command[1], clientID);
-    switch (response) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 250:
-            return MakeResponse("250: Successful change.", true).GetJson();
-        case 550:
-            return MakeResponse(PERMISSION_DENIED_ERROR_MESSAGE).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
-}
-
-string ServerAPI::DownloadFile(vector <string> command, int clientID) {
-    if (command.size() != 1) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-}
-
-string ServerAPI::Help(vector <string> command, int clientID) {
-    if (command.size() != 0) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
-}
-
-string ServerAPI::Quit(vector <string> command, int clientID) {
-    if (command.size() != 0) return MakeResponse(SYNTAX_ERROR_MESSAGE).GetJson();
+string ServerAPI::Quit(int clientID) {
     int response = serverCore->Quit(clientID);
-    switch (response) {
-        case 332:
-            return MakeResponse(UNAUTHORIZED_ERROR_MESSAGE).GetJson();
-        case 250:
-            return MakeResponse(QUIT_OK, true).GetJson();
-        default:
-            return MakeResponse(UNKNOWN_ERROR_MESSAGE).GetJson();
-    }
+    JsonSerializer responseSerializer;
+    responseSerializer.AddItem("code", Utility::ToStr(response));
+    return responseSerializer.GetJson();
 }
 
 void ServerAPI::SetupSockets() {
     requestSocket.FD = socket(AF_INET, SOCK_STREAM, 0);
     dataSocket.FD = socket(AF_INET, SOCK_STREAM, 0);
+    maxFD = max(requestSocket.FD, dataSocket.FD);
     
     int opt = 1;
     setsockopt(requestSocket.FD, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
@@ -233,10 +176,10 @@ void ServerAPI::AcceptClient() {
     maxFD = max(maxFD, newClientFD);
     Client newClient;
     newClient.dataFD = -1;
-    newClient.message = "";
+    newClient.message = Utility::ToStr(newClientFD);
     newClient.isDownloading = false;
     clients[newClientFD] = newClient;
-    FD_SET(newClientFD, &readSet);
+    FD_SET(newClientFD, &writeSet);
     logger->Log("New client was connected to server.");
 }
 
@@ -249,12 +192,12 @@ void ServerAPI::AcceptDataClient() {
     FD_SET(newClientFD, &readSet);
 }
 
-void ServerAPI::AnswerRequest(int clientFD) {
+void ServerAPI::GetRequest(int clientFD) {
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(clientFD, buf, MAX_BUF_SIZE, 0);
     string request(buf);
-    string response = HandleCommand(request, clientFD);
-    Client client = clients[clientFD];
-    client.message = response;
+    string response = HandleRequest(request, clientFD);
+    clients[clientFD].message = response;
     FD_CLR(clientFD, &readSet);
     FD_SET(clientFD, &writeSet);
 }
@@ -273,6 +216,7 @@ void ServerAPI::SendMessage(int clientFD) {
 
 void ServerAPI::MapDataClient(int clientDataFD)
 {
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(clientDataFD, buf, MAX_BUF_SIZE, 0);
     int clientFD = atoi(buf);
     if (clients.find(clientFD) != clients.end()) {
@@ -284,6 +228,7 @@ void ServerAPI::MapDataClient(int clientDataFD)
 }
 
 void ServerAPI::StartDownload(int clientFD) {
+    memset(buf, 0, MAX_BUF_SIZE);
     recv(clientFD, buf, MAX_BUF_SIZE, 0);
     FD_CLR(clientFD, &readSet);
     FD_SET(clientFD, &writeSet);
@@ -291,6 +236,21 @@ void ServerAPI::StartDownload(int clientFD) {
 
 void ServerAPI::SendData(int clientFD) {
     Client client = clients[clientFD];
+    if (client.isDownloading) {
+        string len = Utility::ToStr(client.fileLen);
+        send(client.dataFD, len.c_str(), strlen(len.c_str()), 0);
+        clients[clientFD].isDownloading = false;
+        FD_CLR(client.dataFD, &writeSet);
+        FD_SET(client.dataFD, &readSet);
+    }
+    else {
+        send(client.dataFD, client.contentParts[0].c_str(), strlen(client.contentParts[0].c_str()), 0);
+        clients[clientFD].contentParts.erase(clients[clientFD].contentParts.begin());
+        if (clients[clientFD].contentParts.size() == 0) {
+            FD_CLR(client.dataFD, &writeSet);
+            FD_SET(clientFD, &readSet);
+        }
+    }
 }
 
 void ServerAPI::HandleRequests() {
@@ -298,7 +258,7 @@ void ServerAPI::HandleRequests() {
         AcceptClient();
     for (auto client : clients) {
         if (FD_ISSET(client.first, &workingReadSet)) 
-            AnswerRequest(client.first);
+            GetRequest(client.first);
         if (FD_ISSET(client.first, &workingWriteSet))
             SendMessage(client.first);
     }
@@ -307,16 +267,21 @@ void ServerAPI::HandleRequests() {
 void ServerAPI::HandleDownloads() {
     if (FD_ISSET(dataSocket.FD, &workingReadSet))
         AcceptDataClient();
-    for (int clientFD : unmappedClients) {
-        if (FD_ISSET(clientFD, &workingReadSet)) 
-            MapDataClient(clientFD);
-    }
-    for (auto client : clients) {
+    
+    vector c(clients.begin(), clients.end());
+    for (auto client : c) {
         int dataFD = client.second.dataFD;
+        if (dataFD < 0) continue;
         if (FD_ISSET(dataFD, &workingReadSet))
             StartDownload(dataFD);
         if (FD_ISSET(dataFD, &workingWriteSet))
             SendData(client.first);
+    }
+
+    vector uc(unmappedClients.begin(), unmappedClients.end());
+    for (int clientFD : uc) {
+        if (FD_ISSET(clientFD, &workingReadSet)) 
+            MapDataClient(clientFD);
     }
 }
 

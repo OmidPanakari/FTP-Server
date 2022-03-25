@@ -37,6 +37,12 @@ struct ShowListResponse
     std::vector<std::string> names;
 };
 
+struct GetFileResponse
+{
+    int code;
+    std::string content;
+};
+
 
 class ServerCore{
 private:
@@ -64,6 +70,7 @@ public:
     ShowListResponse ShowList(int);
     int ChangeDirectory(std::string, int);
     int RenameFile(std::string, std::string, int);
+    GetFileResponse GetFile(std::string, int);
     int Quit(int);
 };
 #endif
