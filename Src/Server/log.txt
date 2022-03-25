@@ -1,0 +1,87 @@
+Fri Mar 25 14:21:53 2022 : Initializing server.
+Fri Mar 25 14:21:53 2022 : Started listening for clients
+Fri Mar 25 14:21:58 2022 : New client was connected to server.
+Fri Mar 25 14:22:02 2022 : Username Amir was checked.
+Fri Mar 25 14:22:04 2022 : User Amir authenticated.
+Fri Mar 25 14:22:15 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Fri Mar 25 14:22:21 2022 : User Amir viewed current directory -> /ehsan.
+Fri Mar 25 14:22:33 2022 : User Amir desired path doesn't exist.
+Fri Mar 25 14:22:37 2022 : User Amir changed directory from ./root/ehsan to ./root/ehsan.
+Fri Mar 25 14:22:38 2022 : User Amir viewed current directory -> /ehsan.
+Fri Mar 25 18:22:23 2022 : Initializing server.
+Fri Mar 25 18:22:23 2022 : Started listening for clients
+Fri Mar 25 18:22:28 2022 : New client was connected to server.
+Fri Mar 25 18:25:02 2022 : Initializing server.
+Fri Mar 25 18:25:02 2022 : Started listening for clients
+Fri Mar 25 18:25:08 2022 : New client was connected to server.
+Fri Mar 25 18:25:35 2022 : Username omid was checked.
+Fri Mar 25 18:25:53 2022 : User omid authenticated.
+Fri Mar 25 18:26:50 2022 : User omid viewed current directory -> /.
+Fri Mar 25 18:26:54 2022 : User omid changed directory from ./root/ to ./root/ehsan.
+Fri Mar 25 18:26:55 2022 : User omid viewed current directory -> /ehsan.
+Fri Mar 25 18:26:58 2022 : User omid changed directory from ./root/ehsan to ./root/.
+Fri Mar 25 18:27:00 2022 : User omid viewed current directory -> /.
+Fri Mar 25 18:27:54 2022 : User omid deleted file/directory -> ehsan/testi.txt.
+Fri Mar 25 18:28:07 2022 : User omidviewed list of entries in directory ./root/.
+Fri Mar 25 18:28:14 2022 : User omid changed directory from ./root/ to ./root/ehsan.
+Fri Mar 25 18:28:15 2022 : User omidviewed list of entries in directory ./root/ehsan.
+Fri Mar 25 18:31:43 2022 : Initializing server.
+Fri Mar 25 18:31:43 2022 : Started listening for clients
+Fri Mar 25 18:31:49 2022 : New client was connected to server.
+Fri Mar 25 18:31:54 2022 : Username omid was checked.
+Fri Mar 25 18:31:59 2022 : User omid authenticated.
+Fri Mar 25 18:32:21 2022 : User omid doesn't have sufficient permission to access desired file -> ehsan/test.txt.
+Fri Mar 25 18:32:33 2022 : User omid logged out.
+Fri Mar 25 18:32:38 2022 : Username Amir was checked.
+Fri Mar 25 18:32:41 2022 : User Amir authenticated.
+Fri Mar 25 18:33:25 2022 : User Amir renamed ehsan/test.txt to t.txt.
+Fri Mar 25 18:33:40 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Fri Mar 25 18:38:30 2022 : Initializing server.
+Fri Mar 25 18:38:30 2022 : Started listening for clients
+Fri Mar 25 18:38:33 2022 : New client was connected to server.
+Fri Mar 25 18:38:45 2022 : Username omid was checked.
+Fri Mar 25 18:38:54 2022 : User omid authenticated.
+Fri Mar 25 18:38:56 2022 : User omid logged out.
+Fri Mar 25 18:39:02 2022 : Username Amir was checked.
+Fri Mar 25 18:39:05 2022 : User Amir authenticated.
+Fri Mar 25 18:39:43 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Fri Mar 25 18:47:19 2022 : Initializing server.
+Fri Mar 25 18:47:19 2022 : Started listening for clients
+Fri Mar 25 18:47:23 2022 : New client was connected to server.
+Fri Mar 25 18:47:28 2022 : Username Amir was checked.
+Fri Mar 25 18:47:30 2022 : User Amir authenticated.
+Fri Mar 25 18:47:54 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Fri Mar 25 18:54:57 2022 : Initializing server.
+Fri Mar 25 18:54:57 2022 : Started listening for clients
+Fri Mar 25 18:55:01 2022 : New client was connected to server.
+Fri Mar 25 18:55:06 2022 : Username Amir was checked.
+Fri Mar 25 18:55:22 2022 : Unauthorized request.
+Fri Mar 25 19:46:40 2022 : Initializing server.
+Fri Mar 25 19:46:40 2022 : Started listening for clients
+Fri Mar 25 19:46:50 2022 : New client was connected to server.
+Fri Mar 25 19:47:55 2022 : Initializing server.
+Fri Mar 25 19:47:55 2022 : Started listening for clients
+Fri Mar 25 19:48:01 2022 : New client was connected to server.
+Fri Mar 25 19:49:08 2022 : Initializing server.
+Fri Mar 25 19:49:08 2022 : Started listening for clients
+Fri Mar 25 19:49:11 2022 : New client was connected to server.
+Fri Mar 25 19:49:58 2022 : Initializing server.
+Fri Mar 25 19:49:58 2022 : Started listening for clients
+Fri Mar 25 19:50:03 2022 : New client was connected to server.
+Fri Mar 25 19:50:38 2022 : Initializing server.
+Fri Mar 25 19:50:38 2022 : Started listening for clients
+Fri Mar 25 19:50:41 2022 : New client was connected to server.
+Fri Mar 25 19:51:12 2022 : Initializing server.
+Fri Mar 25 19:51:12 2022 : Started listening for clients
+Fri Mar 25 19:51:17 2022 : New client was connected to server.
+Fri Mar 25 19:52:01 2022 : Initializing server.
+Fri Mar 25 19:52:01 2022 : Started listening for clients
+Fri Mar 25 19:52:03 2022 : New client was connected to server.
+Fri Mar 25 19:55:47 2022 : Initializing server.
+Fri Mar 25 19:55:47 2022 : Started listening for clients
+Fri Mar 25 19:55:50 2022 : New client was connected to server.
+Fri Mar 25 19:57:18 2022 : Initializing server.
+Fri Mar 25 19:57:18 2022 : Started listening for clients
+Fri Mar 25 19:57:21 2022 : New client was connected to server.
+Fri Mar 25 19:57:40 2022 : New client was connected to server.
+Fri Mar 25 19:57:46 2022 : New client was connected to server.

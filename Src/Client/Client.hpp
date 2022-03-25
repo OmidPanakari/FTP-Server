@@ -45,7 +45,7 @@ class Client {
 private:
     int requestPort, dataPort;
     int requestFD, dataFD;
-    char buf[MAX_BUF_SIZE];
+    char buf[MAX_BUF_SIZE + 1];
     
     void ConnectServer();
     void HandleCommand(std::string);

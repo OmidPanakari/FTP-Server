@@ -5,14 +5,14 @@ RM = rm
 
 
 
-all: Server.out
+all: server.out
 
 
-Server.out: Server.o ServerAPI.o ServerCore.o Logger.o JsonSerializer.o Utility.o
+server.out: main.o ServerAPI.o ServerCore.o Logger.o JsonSerializer.o Utility.o
 	$(CC) $(FLAGS) Server.o Logger.o JsonSerializer.o ServerCore.o ServerAPI.o Utility.o -o Server.out
 
-Server.o: Server.cpp ServerAPI.hpp ServerCore.hpp
-	$(CC) $(FLAGS) Server.cpp -c
+main.o: main.cpp ServerAPI.hpp ServerCore.hpp
+	$(CC) $(FLAGS) main.cpp -c
 
 ServerAPI.o: ServerAPI.cpp ServerAPI.hpp Logger.hpp JsonSerializer.hpp ServerAPI.hpp Utility.hpp
 	$(CC) $(FLAGS) ServerAPI.cpp -c

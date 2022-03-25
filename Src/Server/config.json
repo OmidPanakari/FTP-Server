@@ -1,7 +1,7 @@
 {
     "logFile" : "log.txt",
     "privilegedFiles" : [
-
+        "/ehsan/test.txt"
     ],
     "users" : [
         {

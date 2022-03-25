@@ -68,11 +68,13 @@ string ServerCore::MakeDirStr(vector<string> pathStk, bool addRoot = true) {
     return addRoot ? ROOT + dir : dir;
 }
 
-vector<string> ServerCore::ConvertDirectory(vector<string> current, string path) {
+vector<string> ServerCore::MakeDirStk(vector<string> current, string path) {
     vector<string> pathWay = Split(path, '/');
     if (path[0] == '/')
         current.clear();
     for (string p : pathWay) {
+        if (p == "") 
+            continue;
         if (p == "..") {
             if (current.size())
                 current.pop_back();
@@ -97,6 +99,9 @@ int ServerCore::CheckUsername(string username, int clientID) {
         logger->Log("Maximum number of users exeeded.");
         return 425;
     }
+    if (loggedInUsers.find(clientID) != loggedInUsers.end()) {
+        return 500;
+    }
     for (uint i = 0; i < users.size(); i++) {
         if (users[i].username == username) {
             OnlineUser newLogin;
@@ -115,6 +120,8 @@ int ServerCore::Authenticate(string password, int clientID) {
     auto user = loggedInUsers.find(clientID);
     if(user != loggedInUsers.end()) {
         OnlineUser* onlineUser = &user->second;
+        if (onlineUser->isAuthenticated)
+            return 500;
         if(onlineUser->user->password == password) {
             onlineUser->isAuthenticated = true;
             onlineUser->directory.clear();
@@ -142,7 +149,7 @@ int ServerCore::MakeDirectory(string path, int clientID) {
         logger->Log("Unauthorized request.");
         return 332;
     }
-    auto dest = ConvertDirectory(loggedInUsers[clientID].directory, path);
+    auto dest = MakeDirStk(loggedInUsers[clientID].directory, path);
     if (dest.empty())
         return 500;
     string newDir = dest.back();
@@ -170,13 +177,13 @@ int ServerCore::DeleteFileOrDirectory(std::string path, int clientID) {
         return 332;
     }
     auto currentDirectory = loggedInUsers[clientID].directory;
-    auto dest = ConvertDirectory(currentDirectory, path);
+    auto dest = MakeDirStk(currentDirectory, path);
     auto destStr = MakeDirStr(dest);
     if (!PathExists(dest)) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " desired path doesn't exist.");
         return 500;
     }
-    if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(destStr) != adminFiles.end()) {
+    if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(MakeDirStr(dest, false)) != adminFiles.end()) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " doesn't have sufficient permission to access desired file -> " + path + ".");
         return 550;
     }
@@ -213,7 +220,7 @@ int ServerCore::ChangeDirectory(std::string path, int clientID) {
         return 332;
     }
     auto currentDirectory = loggedInUsers[clientID].directory;
-    auto dest = ConvertDirectory(currentDirectory, path);
+    auto dest = MakeDirStk(currentDirectory, path);
     if (!PathExists(dest)) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " desired path doesn't exist.");
         return 500;
@@ -229,7 +236,7 @@ int ServerCore::RenameFile(std::string path, std::string newPath, int clientID) 
         return 332;
     }
     auto currentDirectory = loggedInUsers[clientID].directory;
-    auto dest = ConvertDirectory(currentDirectory, path);
+    auto dest = MakeDirStk(currentDirectory, path);
     auto old = dest.back();
     if (!PathExists(dest)) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " desired path doesn't exist.");
@@ -237,7 +244,7 @@ int ServerCore::RenameFile(std::string path, std::string newPath, int clientID) 
     }
     dest.pop_back();
     auto destStr = MakeDirStr(dest) + "/";
-    if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(destStr + old) != adminFiles.end()) {
+    if (!loggedInUsers[clientID].user->isAdmin && adminFiles.find(MakeDirStr(dest, false) + "/" + old) != adminFiles.end()) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " doesn't have sufficient permission to access desired file -> " + path + ".");
         return 550;
     }
@@ -255,7 +262,7 @@ GetFileResponse ServerCore::GetFile(string filename, int clientID) {
         return {332, ""};
     }
     auto currentDirectory = loggedInUsers[clientID].directory;
-    auto dest = ConvertDirectory(currentDirectory, filename);
+    auto dest = MakeDirStk(currentDirectory, filename);
     if (!PathExists(dest)) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " desired file doesn't exist in this directory.");
         return {332, ""};
@@ -271,9 +278,8 @@ GetFileResponse ServerCore::GetFile(string filename, int clientID) {
 }
 
 int ServerCore::Quit(int clientID) {
-    if (!IsAuthenticated(clientID)) {
-        logger->Log("Unauthorized request.");
-        return 332;
+    if (loggedInUsers.find(clientID) == loggedInUsers.end()) {
+        return 500;
     }
     string username = loggedInUsers[clientID].user->username;
     loggedInUsers.erase(clientID);

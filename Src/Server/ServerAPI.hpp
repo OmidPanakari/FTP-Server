@@ -26,18 +26,6 @@
 #define QUIT "quit"
 #define CONFIGFILE "config.json"
 
-#define SYNTAX_ERROR_MESSAGE "501: Syntax error in parameters or arguments."
-#define MAXIMUM_USERS_ERROR_MESSAGE "425: Can't open data connection."
-#define USER_OK "331: User name okay, need password."
-#define INVALID_CREDENTIALS_ERROR_MESSAGE "430: Invalid username or password."
-#define UNKNOWN_ERROR_MESSAGE "500: Error"
-#define BAD_SEQUENCE_ERROR_MESSAGE "503: Bad sequence of commands."
-#define LOGIN_OK "230: User logged in, proceed. Logged out if appropriate."
-#define LIST_TRANSFER_OK "226: List transfer done."
-#define QUIT_OK "221: Successful Quit."
-#define UNAUTHORIZED_ERROR_MESSAGE "332: Need account for login."
-#define PERMISSION_DENIED_ERROR_MESSAGE "550: File unavailable."
-
 #define MAX_BUF_SIZE 2048
 
 struct Socket {
@@ -63,7 +51,7 @@ private:
     Socket requestSocket, dataSocket;
     int maxFD;
     fd_set readSet, writeSet, workingReadSet, workingWriteSet;
-    char buf[MAX_BUF_SIZE];
+    char buf[MAX_BUF_SIZE + 1];
 
     JsonSerializer MakeResponse(std::string, bool);
     std::string CheckUsername(JsonSerializer, int);

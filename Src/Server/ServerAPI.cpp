@@ -193,8 +193,14 @@ void ServerAPI::AcceptDataClient() {
 }
 
 void ServerAPI::GetRequest(int clientFD) {
-    memset(buf, 0, MAX_BUF_SIZE);
-    recv(clientFD, buf, MAX_BUF_SIZE, 0);
+    memset(buf, 0, MAX_BUF_SIZE + 1);
+    if (recv(clientFD, buf, MAX_BUF_SIZE, 0) == 0) {
+        serverCore->Quit(clientFD);
+        close(clientFD);
+        clients.erase(clientFD);
+        FD_CLR(clientFD, &readSet);
+        return;
+    }
     string request(buf);
     string response = HandleRequest(request, clientFD);
     clients[clientFD].message = response;
@@ -204,7 +210,13 @@ void ServerAPI::GetRequest(int clientFD) {
 
 void ServerAPI::SendMessage(int clientFD) {
     string message = clients[clientFD].message;
-    send(clientFD, message.c_str(), strlen(message.c_str()), 0);
+    if (send(clientFD, message.c_str(), strlen(message.c_str()), 0) == -1) {
+        serverCore->Quit(clientFD);
+        close(clientFD);
+        clients.erase(clientFD);
+        FD_CLR(clientFD, &writeSet);
+        return;
+    }
     FD_CLR(clientFD, &writeSet);
     Client client = clients[clientFD];
     if (client.isDownloading)
@@ -216,8 +228,12 @@ void ServerAPI::SendMessage(int clientFD) {
 
 void ServerAPI::MapDataClient(int clientDataFD)
 {
-    memset(buf, 0, MAX_BUF_SIZE);
-    recv(clientDataFD, buf, MAX_BUF_SIZE, 0);
+    memset(buf, 0, MAX_BUF_SIZE + 1);
+    if (recv(clientDataFD, buf, MAX_BUF_SIZE, 0) == 0) {
+        close(clientDataFD);
+        FD_CLR(clientDataFD, &readSet);
+        return;
+    }
     int clientFD = atoi(buf);
     if (clients.find(clientFD) != clients.end()) {
         clients[clientFD].dataFD = clientDataFD;
@@ -228,23 +244,34 @@ void ServerAPI::MapDataClient(int clientDataFD)
 }
 
 void ServerAPI::StartDownload(int clientFD) {
-    memset(buf, 0, MAX_BUF_SIZE);
-    recv(clientFD, buf, MAX_BUF_SIZE, 0);
-    FD_CLR(clientFD, &readSet);
-    FD_SET(clientFD, &writeSet);
+    memset(buf, 0, MAX_BUF_SIZE + 1);
+    int dataFD = clients[clientFD].dataFD;
+    if (recv(dataFD, buf, MAX_BUF_SIZE, 0) == 0) {
+        close(dataFD);
+        FD_CLR(dataFD, &readSet);
+        return;
+    }
+    FD_CLR(dataFD, &readSet);
+    FD_SET(dataFD, &writeSet);
 }
 
 void ServerAPI::SendData(int clientFD) {
     Client client = clients[clientFD];
     if (client.isDownloading) {
         string len = Utility::ToStr(client.fileLen);
-        send(client.dataFD, len.c_str(), strlen(len.c_str()), 0);
+        if (send(client.dataFD, len.c_str(), strlen(len.c_str()), 0) == -1) {
+            close(client.dataFD);
+            return;
+        }
         clients[clientFD].isDownloading = false;
         FD_CLR(client.dataFD, &writeSet);
         FD_SET(client.dataFD, &readSet);
     }
     else {
-        send(client.dataFD, client.contentParts[0].c_str(), strlen(client.contentParts[0].c_str()), 0);
+        if (send(client.dataFD, client.contentParts[0].c_str(), strlen(client.contentParts[0].c_str()), 0) == -1) {
+            close(clientFD);
+            return;
+        }
         clients[clientFD].contentParts.erase(clients[clientFD].contentParts.begin());
         if (clients[clientFD].contentParts.size() == 0) {
             FD_CLR(client.dataFD, &writeSet);
@@ -256,7 +283,8 @@ void ServerAPI::SendData(int clientFD) {
 void ServerAPI::HandleRequests() {
     if (FD_ISSET(requestSocket.FD, &workingReadSet))
         AcceptClient();
-    for (auto client : clients) {
+    vector c(clients.begin(), clients.end());
+    for (auto client : c) {
         if (FD_ISSET(client.first, &workingReadSet)) 
             GetRequest(client.first);
         if (FD_ISSET(client.first, &workingWriteSet))
@@ -273,7 +301,7 @@ void ServerAPI::HandleDownloads() {
         int dataFD = client.second.dataFD;
         if (dataFD < 0) continue;
         if (FD_ISSET(dataFD, &workingReadSet))
-            StartDownload(dataFD);
+            StartDownload(client.first);
         if (FD_ISSET(dataFD, &workingWriteSet))
             SendData(client.first);
     }
