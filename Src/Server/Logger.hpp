@@ -3,7 +3,7 @@
 
 #ifndef FTP_SERVER_LOGGER_HPP
 #define FTP_SERVER_LOGGER_HPP
-class Logger{
+class Logger {
 private:
     std::string fileName;
     
