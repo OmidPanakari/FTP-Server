@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <cstring>
 #include <iostream>
 #include "JsonSerializer.hpp"
 #include "Logger.hpp"
@@ -16,6 +17,7 @@ struct User{
     std::string username;
     std::string password;
     bool isAdmin;
+    int size;
 };
 
 struct OnlineUser
@@ -55,7 +57,6 @@ private:
     void ReadUsers(JsonSerializer*);
     void ReadAdminFiles(JsonSerializer*);
     bool IsAuthenticated(int);
-    std::vector<std::string> Split(std::string, char);
     std::vector<std::string> MakeDirStk(std::vector<std::string>, std::string);
     std::string MakeDirStr(std::vector<std::string>, bool);
     bool PathExists(std::vector<std::string>);

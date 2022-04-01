@@ -7,12 +7,14 @@
         {
             "username" : "Amir",
             "password" : "1234",
-            "isAdmin" : "True"
+            "isAdmin" : "True",
+            "size" : "10"
         },
         {
             "username" : "omid",
             "password" : "mysecret",
-            "isAdmin" : "False"
+            "isAdmin" : "False",
+            "size" : "1000000"
         }
     ],
     "maxAllowedConnections" : "10",

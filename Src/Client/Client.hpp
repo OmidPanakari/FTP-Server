@@ -40,6 +40,7 @@
 #define CHANGE_DIRECTORY_OK "250: Successful change."
 #define CHANGE_NAME_OK "250: Successful change."
 #define DOWNLOAD_OK "226: Successful Download."
+#define FILE_SIZE_ERROR_MESSAGE "425: Can't open data connection."
 
 class Client {
 private:
@@ -49,7 +50,8 @@ private:
     
     void ConnectServer();
     void HandleCommand(std::string);
-    void DownloadFile(std::string);
+    std::string Download(int);
+    void SaveFile(std::string, std::string);
 
     void CheckUsername(std::vector<std::string>);
     void Authenticate(std::vector<std::string>);

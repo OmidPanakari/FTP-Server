@@ -34,7 +34,7 @@ struct Socket {
 };
 
 struct Client {
-    int dataFD, fileLen;
+    int dataFD;
     std::string message;
     std::vector<std::string> contentParts;
     bool isDownloading;
@@ -73,7 +73,6 @@ private:
     void GetRequest(int);
     void SendMessage(int);
     void MapDataClient(int);
-    void StartDownload(int);
     void SendData(int);
     void HandleDownloads();
 

@@ -1,5 +1,6 @@
 #include "ServerCore.hpp"
 #include "Logger.hpp"
+#include "Utility.hpp"
 #include <sys/stat.h>
 #include <filesystem>
 
@@ -24,6 +25,7 @@ void ServerCore::ReadUsers(JsonSerializer* config) {
         newUser.username = userConfig.Get("username");
         newUser.password = userConfig.Get("password");
         newUser.isAdmin = userConfig.Get("isAdmin") == "True";
+        newUser.size = userConfig.GetInteger("size");
         users.push_back(newUser);        
     }
 }
@@ -44,20 +46,6 @@ bool ServerCore::IsAuthenticated(int clientID) {
     return false;
 }
 
-vector <string> ServerCore::Split(string str, char c) {
-    vector<string> result;
-    string temp;
-    for (uint i = 0; i < str.size(); i++) {
-        if (str[i] != c) temp += str[i];
-        else{
-            result.push_back(temp);
-            temp = "";
-        }
-    }
-    if (!temp.empty()) result.push_back(temp);
-    return result;
-}
-
 string ServerCore::MakeDirStr(vector<string> pathStk, bool addRoot = true) {
     string dir = "";
     for (string p : pathStk) {
@@ -69,7 +57,7 @@ string ServerCore::MakeDirStr(vector<string> pathStk, bool addRoot = true) {
 }
 
 vector<string> ServerCore::MakeDirStk(vector<string> current, string path) {
-    vector<string> pathWay = Split(path, '/');
+    vector<string> pathWay = Utility::Split(path, '/');
     if (path[0] == '/')
         current.clear();
     for (string p : pathWay) {
@@ -271,6 +259,10 @@ GetFileResponse ServerCore::GetFile(string filename, int clientID) {
     ifstream file(destStr);
     string content = string((istreambuf_iterator<char>(file)), (istreambuf_iterator<char>()));
     file.close();
+    if (strlen(content.c_str()) > (uint)loggedInUsers[clientID].user->size) {
+        return {425, ""};
+    }
+    loggedInUsers[clientID].user->size -= strlen(content.c_str());
     GetFileResponse response;
     response.code = 226;
     response.content = content;

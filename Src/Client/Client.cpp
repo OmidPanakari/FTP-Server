@@ -44,20 +44,17 @@ void Client::ConnectServer() {
     cout << "Welcome to FTP-Server :)" << endl;
 }
 
-void Client::DownloadFile(string filename) {
-    memset(buf, 0, MAX_BUF_SIZE + 1);
-    recv(dataFD, buf, MAX_BUF_SIZE, 0);
-    int fileSize = atoi(buf);
-    cout << fileSize << endl;
-    cout << (fileSize + MAX_BUF_SIZE - 1) / MAX_BUF_SIZE << endl;
-    send(dataFD, "OK", strlen("OK"), 0);
+string Client::Download(int dataSize) {
     string content = "";
-    for (int i = 0; i < (fileSize + MAX_BUF_SIZE - 1) / MAX_BUF_SIZE; i++) {
+    while(strlen(content.c_str()) != (uint)dataSize) {
         memset(buf, 0, MAX_BUF_SIZE + 1);
         recv(dataFD, buf, MAX_BUF_SIZE, 0);
         content += buf;
     }
-    string path = string(DOWNLOAD_DIR) + "/" + filename;
+    return content;
+}
+
+void Client::SaveFile(string path, string content)  {
     ofstream file(path);
     file << content;
     file.close();
@@ -275,15 +272,15 @@ void Client::ShowList(vector <string> command) {
     JsonSerializer responseDeserializer;
     responseDeserializer.ReadJson(response);
 
+    string content;
     switch (responseDeserializer.GetInteger("code")) {
         case 332:
             cout << UNAUTHORIZED_ERROR_MESSAGE << endl;
             break;
         case 226:
+            content = Download(responseDeserializer.GetInteger("size"));
+            cout << content;
             cout << LIST_TRANSFER_OK << endl;
-            for (string item : responseDeserializer.GetStrArray("names")) {
-                cout << item << endl;
-            }
             break;
         default:
             cout << UNKNOWN_ERROR_MESSAGE << endl;
@@ -369,12 +366,18 @@ void Client::GetFile(vector <string> command) {
     JsonSerializer responseDeserializer;
     responseDeserializer.ReadJson(response);
 
+    string content, path;
     switch (responseDeserializer.GetInteger("code")) {
+        case 425:
+            cout << FILE_SIZE_ERROR_MESSAGE << endl;
+            break;
         case 332:
             cout << UNAUTHORIZED_ERROR_MESSAGE << endl;
             break;
         case 226:
-            DownloadFile(command[0]);
+            content = Download(responseDeserializer.GetInteger("size"));
+            path = string(DOWNLOAD_DIR) + "/" + command[0];
+            SaveFile(path, content);
             cout << DOWNLOAD_OK << endl;
             break;
         default:

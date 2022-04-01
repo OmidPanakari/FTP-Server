@@ -100,7 +100,19 @@ string ServerAPI::ShowList(int clientID) {
     ShowListResponse response = serverCore->ShowList(clientID);
     JsonSerializer responseSerializer;
     responseSerializer.AddItem("code", Utility::ToStr(response.code));
-    responseSerializer.AddList("names", response.names);
+    if (response.code == 226) {
+        string content = "";
+        for (string name : response.names) {
+            content += name + "\n";
+        }
+        responseSerializer.AddItem("size", Utility::ToStr(strlen(content.c_str())));
+        vector<string> contentParts;
+        for (uint i = 0; i < content.size(); i += MAX_BUF_SIZE) {
+            contentParts.push_back(content.substr(i, MAX_BUF_SIZE));
+        }
+        clients[clientID].contentParts.insert(clients[clientID].contentParts.begin(), contentParts.begin(), contentParts.end());
+        FD_SET(clients[clientID].dataFD, &writeSet);
+    }
     return responseSerializer.GetJson();
 }
 
@@ -122,13 +134,15 @@ string ServerAPI::DownloadFile(JsonSerializer requestDeserializer, int clientID)
     GetFileResponse response = serverCore->GetFile(requestDeserializer.Get("filename"), clientID);
     JsonSerializer responseSerializer;
     responseSerializer.AddItem("code", Utility::ToStr(response.code));
-    clients[clientID].isDownloading = true;
-    vector<string> contentParts;
-    for (uint i = 0; i < response.content.size(); i += MAX_BUF_SIZE) {
-        contentParts.push_back(response.content.substr(i, MAX_BUF_SIZE));
+    if (response.code == 226) {
+        responseSerializer.AddItem("size", Utility::ToStr(strlen(response.content.c_str())));
+        vector<string> contentParts;
+        for (uint i = 0; i < response.content.size(); i += MAX_BUF_SIZE) {
+            contentParts.push_back(response.content.substr(i, MAX_BUF_SIZE));
+        }
+        clients[clientID].contentParts.insert(clients[clientID].contentParts.begin(), contentParts.begin(), contentParts.end());
+        FD_SET(clients[clientID].dataFD, &writeSet);
     }
-    clients[clientID].contentParts = contentParts;
-    clients[clientID].fileLen = strlen(response.content.c_str());
     return responseSerializer.GetJson();
 }
 
@@ -243,40 +257,15 @@ void ServerAPI::MapDataClient(int clientDataFD)
     }
 }
 
-void ServerAPI::StartDownload(int clientFD) {
-    memset(buf, 0, MAX_BUF_SIZE + 1);
-    int dataFD = clients[clientFD].dataFD;
-    if (recv(dataFD, buf, MAX_BUF_SIZE, 0) == 0) {
-        close(dataFD);
-        FD_CLR(dataFD, &readSet);
-        return;
-    }
-    FD_CLR(dataFD, &readSet);
-    FD_SET(dataFD, &writeSet);
-}
-
 void ServerAPI::SendData(int clientFD) {
     Client client = clients[clientFD];
-    if (client.isDownloading) {
-        string len = Utility::ToStr(client.fileLen);
-        if (send(client.dataFD, len.c_str(), strlen(len.c_str()), 0) == -1) {
-            close(client.dataFD);
-            return;
-        }
-        clients[clientFD].isDownloading = false;
-        FD_CLR(client.dataFD, &writeSet);
-        FD_SET(client.dataFD, &readSet);
+    if (send(client.dataFD, client.contentParts[0].c_str(), strlen(client.contentParts[0].c_str()), 0) == -1) {
+        close(clientFD);
+        return;
     }
-    else {
-        if (send(client.dataFD, client.contentParts[0].c_str(), strlen(client.contentParts[0].c_str()), 0) == -1) {
-            close(clientFD);
-            return;
-        }
-        clients[clientFD].contentParts.erase(clients[clientFD].contentParts.begin());
-        if (clients[clientFD].contentParts.size() == 0) {
-            FD_CLR(client.dataFD, &writeSet);
-            FD_SET(clientFD, &readSet);
-        }
+    clients[clientFD].contentParts.erase(clients[clientFD].contentParts.begin());
+    if (clients[clientFD].contentParts.size() == 0) {
+        FD_CLR(client.dataFD, &writeSet);
     }
 }
 
@@ -300,15 +289,13 @@ void ServerAPI::HandleDownloads() {
     for (auto client : c) {
         int dataFD = client.second.dataFD;
         if (dataFD < 0) continue;
-        if (FD_ISSET(dataFD, &workingReadSet))
-            StartDownload(client.first);
         if (FD_ISSET(dataFD, &workingWriteSet))
             SendData(client.first);
     }
 
     vector uc(unmappedClients.begin(), unmappedClients.end());
     for (int clientFD : uc) {
-        if (FD_ISSET(clientFD, &workingReadSet)) 
+        if (FD_ISSET(clientFD, &workingReadSet))
             MapDataClient(clientFD);
     }
 }
