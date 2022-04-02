@@ -84,7 +84,7 @@ bool ServerCore::PathExists(vector<string> path) {
 
 int ServerCore::CheckUsername(string username, int clientID) {
     if (loggedInUsers.size() > maxAllowedConnections) {
-        logger->Log("Maximum number of users exeeded.");
+        logger->Log("Maximum number of users exceeded.");
         return 425;
     }
     if (loggedInUsers.find(clientID) != loggedInUsers.end()) {
@@ -155,7 +155,7 @@ int ServerCore::MakeDirectory(string path, int clientID) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " created new directory -> " + path + ".");
         return 257;
     }
-    logger->Log("Unknow error.");
+    logger->Log("Unknown error.");
     return 500;
 }
 
@@ -179,7 +179,7 @@ int ServerCore::DeleteFileOrDirectory(std::string path, int clientID) {
         logger->Log("User " + loggedInUsers[clientID].user->username + " deleted file/directory -> " + path + ".");
         return 250;
     }
-    logger->Log("Unknow error.");
+    logger->Log("Unknown error.");
     return 500;
 }
 
@@ -198,7 +198,7 @@ ShowListResponse ServerCore::ShowList(int clientID) {
         showListResponse.names.push_back(entry.path().filename().string());
     }
     showListResponse.code = 226;
-    logger->Log("User " + loggedInUsers[clientID].user->username + "viewed list of entries in directory " + dirStr + ".");
+    logger->Log("User " + loggedInUsers[clientID].user->username + " viewed list of entries in directory " + dirStr + ".");
     return showListResponse;
 }
 
@@ -240,7 +240,7 @@ int ServerCore::RenameFile(std::string path, std::string newPath, int clientID) 
         logger->Log("User " + loggedInUsers[clientID].user->username + " renamed " + path + " to " + newPath + ".");
         return 250;
     }
-    logger->Log("Unknow error.");
+    logger->Log("Unknown error.");
     return 500;
 }
 

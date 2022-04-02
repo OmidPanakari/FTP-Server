@@ -154,3 +154,47 @@ Fri Apr  1 12:17:53 2022 : User omid changed directory from ./root/ehsan to ./ro
 Fri Apr  1 12:17:55 2022 : User omid viewed current directory -> /ehsan.
 Fri Apr  1 12:17:57 2022 : User omidviewed list of entries in directory ./root/ehsan.
 Fri Apr  1 12:18:06 2022 : User omid logged out.
+Sat Apr  2 16:08:34 2022 : Initializing server.
+Sat Apr  2 16:08:34 2022 : Started listening for clients
+Sat Apr  2 16:09:16 2022 : New client was connected to server.
+Sat Apr  2 16:10:04 2022 : Username Amir was checked.
+Sat Apr  2 16:10:15 2022 : User Amir authenticated.
+Sat Apr  2 16:10:45 2022 : User Amir viewed current directory -> /.
+Sat Apr  2 16:10:50 2022 : User Amirviewed list of entries in directory ./root/.
+Sat Apr  2 16:10:59 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Sat Apr  2 16:11:00 2022 : User Amirviewed list of entries in directory ./root/ehsan.
+Sat Apr  2 16:11:43 2022 : User Amir logged out.
+Sat Apr  2 16:12:45 2022 : New client was connected to server.
+Sat Apr  2 16:13:18 2022 : Username Amir was checked.
+Sat Apr  2 16:13:20 2022 : User Amir authenticated.
+Sat Apr  2 16:13:23 2022 : User Amir viewed current directory -> /.
+Sat Apr  2 16:13:24 2022 : User Amirviewed list of entries in directory ./root/.
+Sat Apr  2 16:13:28 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Sat Apr  2 16:13:35 2022 : User Amirviewed list of entries in directory ./root/ehsan.
+Sat Apr  2 16:13:53 2022 : User Amir logged out.
+Sat Apr  2 16:13:57 2022 : Initializing server.
+Sat Apr  2 16:13:57 2022 : Started listening for clients
+Sat Apr  2 16:14:01 2022 : New client was connected to server.
+Sat Apr  2 16:14:04 2022 : Username Amir was checked.
+Sat Apr  2 16:14:12 2022 : User Amir authenticated.
+Sat Apr  2 16:15:06 2022 : User Amir created new directory -> amir.
+Sat Apr  2 16:15:08 2022 : User Amirviewed list of entries in directory ./root/.
+Sat Apr  2 16:15:19 2022 : User Amir changed directory from ./root/ to ./root/amir.
+Sat Apr  2 16:15:23 2022 : User Amir desired path doesn't exist.
+Sat Apr  2 16:15:34 2022 : User Amir created new directory -> omid.
+Sat Apr  2 16:15:40 2022 : User Amir logged out.
+Sat Apr  2 16:31:57 2022 : New client was connected to server.
+Sat Apr  2 16:32:02 2022 : New client was connected to server.
+Sat Apr  2 16:32:05 2022 : Username Amir was checked.
+Sat Apr  2 16:32:08 2022 : User Amir authenticated.
+Sat Apr  2 16:32:16 2022 : Username omid was checked.
+Sat Apr  2 16:32:20 2022 : User omid authenticated.
+Sat Apr  2 16:32:54 2022 : User Amirviewed list of entries in directory ./root/.
+Sat Apr  2 16:32:57 2022 : User omidviewed list of entries in directory ./root/.
+Sat Apr  2 16:33:09 2022 : User Amir changed directory from ./root/ to ./root/ehsan.
+Sat Apr  2 16:33:32 2022 : User Amir logged out.
+Sat Apr  2 16:33:38 2022 : User omid changed directory from ./root/ to ./root/ehsan.
+Sat Apr  2 16:33:43 2022 : User omidviewed list of entries in directory ./root/ehsan.
+Sat Apr  2 16:34:16 2022 : Unauthorized request.
+Sat Apr  2 16:34:26 2022 : Invalid username.
+Sat Apr  2 16:34:34 2022 : User omid logged out.

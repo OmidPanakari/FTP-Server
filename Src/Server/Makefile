@@ -9,7 +9,7 @@ all: server.out
 
 
 server.out: main.o ServerAPI.o ServerCore.o Logger.o JsonSerializer.o Utility.o
-	$(CC) $(FLAGS) Server.o Logger.o JsonSerializer.o ServerCore.o ServerAPI.o Utility.o -o Server.out
+	$(CC) $(FLAGS) main.o Logger.o JsonSerializer.o ServerCore.o ServerAPI.o Utility.o -o Server.out
 
 main.o: main.cpp ServerAPI.hpp ServerCore.hpp
 	$(CC) $(FLAGS) main.cpp -c
